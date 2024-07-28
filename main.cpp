@@ -6,17 +6,40 @@
 #include <stdlib.h>
 
 // TODO:
-// * rewrite memories functions to vectors
-// * test <algorythms>
-// * test c++20
-// * add build script
-// * add configurable vocab and memories path to run anywhere
-// * add coloring
-// * add proper error warnings etc.
-// * fix remove due it's saving broken memories
-// * actually sort search results
-// * add tags to search (#tags)
-// * multithreaded QT app after 3d iteration
+// TODO: rewrite memories functions to vectors
+// TODO: test <algorythms>
+// TODO: test c++20
+// TODO: add build script
+// TODO: add configurable vocab and memories path to run anywhere
+// TODO: add coloring
+// TODO: add proper error warnings etc.
+// TODO: normalize string before vocablurary
+
+// TODO: fix remove due it's saving broken memories
+
+// TODO: actually sort search results
+// TODO: add tags to search (#tags)
+// TODO: make actual unittests
+
+// TODO: multithreaded QT app after 3d iteration
+
+// Todo: rewrite using program state and separate functions;
+
+// TODO: rewrite from C-style to C++ IO methods for memory
+// TODO: Translate memory struct from char* to string 
+
+
+struct program_state {
+    std::string last_user_cli_input;
+    std::string last_user_command;
+    std::string last_user_command_arguments;
+    
+    std::vector<memory*> memories;
+    std::string vocablurary;
+};
+
+
+
 
 bool __is_a_number(std::string s)
 {
@@ -25,6 +48,8 @@ bool __is_a_number(std::string s)
         ++it;
     return !s.empty() && it == s.end();
 }
+
+
 
 int main()
 {
@@ -93,7 +118,7 @@ int main()
             }
             int user_input_id_to_remove = atoi(user_input_text.c_str());
 
-            // std::cout << "user input id parsed: " << user_input_id << "\n";
+            // TODO: std::cout << "user input id parsed: " << user_input_id << "\n";
             // TODO: actually search if id exists or not;
             // TODO: do deletion only if such mem exists
             // TODO: write down in terminal memo deleting data.
@@ -149,6 +174,54 @@ int main()
 
     return 0;
 }
+
+
+
+int test_io_and_vector_functions_memory_rewritten() {
+    std::vector <memory*> memories;
+    memory *mem0 = create("text0", 1);
+    memory *mem1 = create("text1", 2);
+    memory *mem2 = create("text2", 3);
+    
+    memories = add(memories, mem0);
+    memories = add(memories, mem1);
+    memories = add(memories, mem2);
+
+    for (auto mem: memories) {
+        std::string text_memory_repr = to_string(mem);
+        std::cout << text_memory_repr << std::endl;
+    }
+
+    memories = remove(memories, 2);
+    std::cout << "\n";
+
+    for (auto mem: memories) {
+        std::string text_memory_repr = to_string(mem);
+        std::cout << text_memory_repr << std::endl;
+    }
+
+    std::string text = "whoa";
+    memories = edit(memories, text, 1);
+    std::cout << "\n";
+
+    for (auto mem: memories) {
+        std::string text_memory_repr = to_string(mem);
+        std::cout << text_memory_repr << std::endl;
+    }
+
+    mem_to_file(
+        std::string("test.txt"), memories
+    );
+
+    std::cout << "\nFrom file: \n";
+    std::vector<memory*> test;
+    test = mem_from_file(std::string("test.txt"));
+    for (auto mem: test) {
+        std::string text_memory_repr = to_string(mem);
+        std::cout << text_memory_repr << std::endl;
+    }
+}
+
 
 int test_levenshtain_distance()
 {

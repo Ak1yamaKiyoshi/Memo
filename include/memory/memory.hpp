@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
+#include <vector>
+#include <sstream>
 
 const size_t MEMORY_MAXSIZE_TEXT = 512;
 const char FILEPATH_STORAGE_NOTES[] = "memory.bin";
@@ -24,6 +26,8 @@ struct memory
     time_t create;
 };
 
+void copy(struct memory *a, struct memory *b);
+
 /* Time operations */
 
 void to_string(const time_t timestamp, const char *format, char *output_buffer);
@@ -36,14 +40,29 @@ struct memory *deallocate(struct memory mem);
 
 void to_string(struct memory *mem, char *output_buffer);
 void to_string(struct memory *mem, float confidence, char *output_buffer);
+std::string to_string(struct memory *r);
+std::string to_string(struct memory *r, float confidence);
 
-/* Array of memories operations */
+/* Array of memories operations (LEGACY) */
 
 struct memory *add(struct memory *memories, int len, const struct memory *new_memory);
 struct memory *remove(struct memory *memories, int len, int id);
 struct memory *edit(struct memory *memories, int len, const char *text, const int id);
 
-/* Singular IO Operations*/
+/* Vector of memories operations */
+
+std::vector<memory *> add(
+    std::vector<memory *> memories,
+    struct memory *new_memory);
+
+std::vector<memory *> remove(
+    std::vector<memory *> memories, int id);
+
+std::vector<memory *> edit(
+    std::vector<memory *> memories,
+    std::string &text, const int id);
+
+/* Singular IO Operations */
 
 int write(FILE *f, const memory mem);
 int read(FILE *f, memory *mem);
@@ -53,3 +72,8 @@ int __get_file_line_amount(FILE *f);
 
 struct memory *from_file(const char *filename, int *lenght);
 void to_file(const char *filename, struct memory *memories, int len);
+
+std::vector<memory*> mem_from_file(std::string filename);
+void mem_to_file(std::string filename, std::vector<memory> memories);
+
+struct memory *from_file(const char *filename, int lenght);
