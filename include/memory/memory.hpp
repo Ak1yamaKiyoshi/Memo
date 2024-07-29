@@ -26,7 +26,7 @@ struct memory
     time_t create;
 };
 
-void copy(struct memory *a, struct memory *b);
+void copy(const struct memory &src, struct memory *dst);
 
 /* Time operations */
 
@@ -52,11 +52,11 @@ struct memory *edit(struct memory *memories, int len, const char *text, const in
 /* Vector of memories operations */
 
 std::vector<memory *> add(
-    std::vector<memory *> memories,
+    std::vector<memory *> &memories,
     struct memory *new_memory);
 
 std::vector<memory *> remove(
-    std::vector<memory *> memories, int id);
+    std::vector<memory *> &memories, int id);
 
 std::vector<memory *> edit(
     std::vector<memory *> memories,

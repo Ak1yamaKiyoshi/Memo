@@ -2,10 +2,30 @@
 #include "include/vocablurary/vocablurary.cpp"
 #include "include/levenshtain/levenshtain.cpp"
 #include "src/search.cpp"
+#include "include/coloring.hpp"
+
 #include <iostream>
 #include <stdlib.h>
+#include <filesystem>
 
-// TODO:
+#include <string> 
+
+#include <algorithm>
+
+#include <cstdlib>
+
+void clear_screen()
+{
+#ifdef WINDOWS
+    std::system("cls");
+#else
+    // Assume POSIX
+    std::system ("clear");
+#endif
+}
+
+// Todo; calculate actual id for memory;
+
 // TODO: rewrite memories functions to vectors
 // TODO: test <algorythms>
 // TODO: test c++20
@@ -24,9 +44,75 @@
 // TODO: multithreaded QT app after 3d iteration
 
 // Todo: rewrite using program state and separate functions;
+// TODO: undo option and cache to multiple files by sessions;
+
 
 // TODO: rewrite from C-style to C++ IO methods for memory
 // TODO: Translate memory struct from char* to string 
+
+// ASCII art on start 
+// Clear command 
+
+enum command_codes {
+    code_ok = 0,
+    code_exit=1,
+    code_error=2
+};
+
+enum message_codes {
+    message_ok = 'i', 
+    message_error = 'e',
+    message_fail = 'x',
+    message_neutral = 'n'
+};
+
+bool __is_a_number(std::string s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it))
+        ++it;
+    return !s.empty() && it == s.end();
+}
+
+int __is_file_exist(std::string filename) {
+    std::ifstream file(filename.c_str());
+    if (file.good()) {
+        return code_ok;
+    } else {
+        return code_error;
+    }
+}
+
+int __touch(std::string filename) {
+    std::ofstream outfile (filename);
+    outfile << " " << std::endl;
+    outfile.close();
+    return code_ok;
+}
+
+
+/**/
+void message(message_codes code, std::string message) {
+    std::string color;
+    switch (code)
+    {
+    case message_error:
+        color = ANSI_YELLOW;
+        break;
+    case message_fail:
+        color = ANSI_RED;   
+        break;
+    case message_ok:
+        color = ANSI_GREEN;
+        break;
+    default:
+        color = ANSI_WHITE;
+        break;
+    }
+    
+    std::string resulting_message = color + std::string(" ") + (char)code + " " + message + ANSI_RESET + "\n";
+    std::cout << resulting_message;
+}
 
 
 struct program_state {
@@ -38,22 +124,233 @@ struct program_state {
     std::string vocablurary;
 };
 
+int get_id(std::vector<memory*> memories) {
+    int max_id;
+    int idx = 0; 
+    for (auto &mem: memories) {
+        if (idx == 0 || mem->id > max_id) {
+            max_id = mem->id;
+        }
+        idx++;
+    }
+    
+    return max_id+1;
+}
+
+void print_command(const std::string& command, const std::string& description) {
+    std::cout << ANSI_BRIGHT_WHITE << command << ANSI_RESET << " - " << ANSI_GREEN << description << ANSI_RESET << "\n";
+}
+
+int command_help() {
+    std::cout << "Command list:\n";
+    print_command("/help", "Displays help information.");
+    print_command("/add <text>", "Adds a new memory with optional tags.");
+    print_command("/remove <id>", "Deletes a memory by its ID.");
+    print_command("/edit %<id> <text>", "Edits a memory with a new text.");
+    print_command("/clear" , "Clears terminal\n");
+    return code_ok;
+}
+
+int command_add(program_state &state) {
+    if (state.last_user_command_arguments.length() > 1) {
+        char *memory_text = new char[state.last_user_command_arguments.length()];
+        strcpy(memory_text, state.last_user_command_arguments.c_str());
+
+        memory *new_memory = create(memory_text, get_id(state.memories));
+        
+        state.vocablurary = discover_words(state.last_user_command_arguments, state.vocablurary);
+        to_file(FILEPATH_STORAGE_VOCABLURARY, state.vocablurary);
+    
+        state.memories = add(state.memories, new_memory);
+
+        mem_to_file(FILEPATH_STORAGE_NOTES, state.memories);
+        message(message_ok, "Memory created and saved successfuly!");
+        message(message_neutral, to_string(new_memory));
+        
+        return code_ok;
+    } else {
+        return code_error;
+    }
+}
+
+struct memory* get_by_id(std::vector<memory*> memories, int to_search) {
+    for (auto &mem: memories) {
+        if (mem->id == to_search) {
+            return mem;
+        }
+    }
+    return nullptr;
+}
+
+int command_edit(program_state &state) {
+    message(message_error, "Not implemented yet");
+    return code_ok;
+}
+
+int command_remove(program_state &state) {
+    if (!__is_a_number(state.last_user_command_arguments)) {
+        message(message_error, 
+            "You entered not valid id of memory to remove; Yours: " 
+            + state.last_user_command_arguments +"\n"
+        );
+        return code_error;
+    } 
+
+    // Todo: add confirmation and printing of deleted memo;
+    // Todo: check if idx exists
+    // TODO: THERE IS A BUG WITH ID'S; ID"S CHANGING!
+    int user_input_id_to_remove = atoi(state.last_user_command_arguments.c_str());
+    int prev_size = state.memories.size();
+
+    struct memory* desired_mem = get_by_id(state.memories, user_input_id_to_remove); 
+    state.memories = remove(state.memories, user_input_id_to_remove);
+
+    int cur_size = state.memories.size();
+    mem_to_file(FILEPATH_STORAGE_NOTES, state.memories);    
+    std::string id_str = std::to_string((int)user_input_id_to_remove);
+    if (!desired_mem) {
+        message(message_error, 
+            "Memory with id '" + id_str + "' does not exist."
+        );
+    } else {
+        message(message_ok,
+            "Memory \"\"\" " + to_string(desired_mem) + "\"\"\" is deleted/");
+    }
+    
+    return code_ok;
+}
+
+int command_clear(program_state &state) {
+    clear_screen();
+    return code_ok;
+}
+
+int command_search(program_state &state) {    
+    std::vector<search_result> results = search(
+        state.memories,
+        state.last_user_command_arguments, 
+        state.vocablurary);
+
+    std::string num = std::to_string(results.size());
+    message(message_ok, "Search results (" + num + std::string("): "));
+    for (auto r : results)
+    {
+        char memory_search_buffer[512];
+        to_string(r.mem, r.confidence, memory_search_buffer);
+        std::cout << memory_search_buffer << std::endl;
+    }
+    return code_ok;
+}
+
+int command_exit(program_state &state) {
+    return code_exit;
+}
+
+int utility_get_input(program_state &state) {
+    
+    char *time_buffer = (char *)malloc(sizeof(char) * TIME_BUFFER_MAXSIZE);
+    int command_offset = 0, backslash_position = 0;
+    
+    to_string(time(0), TIME_FORMAT_FULL, time_buffer);
+
+    std::cout 
+    << "f("
+    <<  ANSI_BLUE << time_buffer 
+    <<  ANSI_RESET <<", " 
+    << ANSI_YELLOW << state.memories.size() 
+    << ANSI_RESET << ") is ";
+    getline(std::cin, state.last_user_cli_input);
+
+    delete time_buffer;
+
+    command_offset = state.last_user_cli_input.find(" ");
+    state.last_user_command = state.last_user_cli_input.substr(0, command_offset);
+    backslash_position = state.last_user_command.rfind("/");
+
+    if (!backslash_position < 1) {
+        message(
+            message_error,
+            "You may forgotten '/' when writing a command. "
+        );
+        return code_error;
+    }
+
+    state.last_user_command = state.last_user_command.substr(1, state.last_user_command.length() - 1);
+    state.last_user_command_arguments = state.last_user_cli_input.substr(
+        command_offset + 1, state.last_user_cli_input.length() - 1);
+
+    // Todo: still possible to add /ad with '/add' only
+    if (state.last_user_command_arguments.length() < 1) {
+        message(message_fail, "The input is to short! Don't forget parameters.");
+        return code_error;
+    }
+    return code_ok;
+}
 
 
+int utility_setup(program_state &state) {
+    if (__is_file_exist(FILEPATH_STORAGE_VOCABLURARY) == code_ok) {
+        state.vocablurary = from_file(FILEPATH_STORAGE_VOCABLURARY);
+    } else {
+        __touch(FILEPATH_STORAGE_VOCABLURARY);
+        message(message_error, 
+            "Vocablurary file '" + std::string(FILEPATH_STORAGE_VOCABLURARY) + "' does not exist. New one is created." 
+        );
+    }
+    if (__is_file_exist(FILEPATH_STORAGE_NOTES) == code_ok) {
+        state.memories = mem_from_file(FILEPATH_STORAGE_NOTES);
+    } else {
+        __touch(FILEPATH_STORAGE_NOTES);
+        message(message_error, 
+            "Memory storage file '" + std::string(FILEPATH_STORAGE_NOTES) + "' does not exist. New one is created."
+        );
+    }
+    return code_ok;
+}
 
-bool __is_a_number(std::string s)
-{
-    std::string::const_iterator it = s.begin();
-    while (it != s.end() && std::isdigit(*it))
-        ++it;
-    return !s.empty() && it == s.end();
+
+int utility_parse_command(program_state &state) {
+    int output = -1;
+    if (!state.last_user_command.compare("add") ) {
+        output = command_add(state);
+    } else if (!state.last_user_command.compare("remove") ) {
+        output = command_remove(state);
+    } else if (!state.last_user_command.compare("edit") ) {
+        output = command_edit(state);
+    } else if (!state.last_user_command.compare("search") ) {
+        output = command_search(state);
+    } else if (!state.last_user_command.compare("exit")) {
+        output = command_exit(state);
+    } else if (!state.last_user_command.compare("clear")) {
+        output = command_clear(state);
+    } else if (!state.last_user_command.compare("help")) { 
+        output = command_help();
+    } else {
+        message(message_error, 
+            "Your command does not match any of existing ones. Your command is '" + state.last_user_command + "'."
+        );
+    }
+    return output;
 }
 
 
 
-int main()
-{
+int main() {
+    program_state state;
+    command_help();
+    utility_setup(state);
+    while (1) {
+        
+        utility_get_input(state);
+        if (utility_parse_command(state) == code_exit)
+            break;
+    }
+    return code_ok;
+}
 
+
+int _main_v1()
+{
     std::string user_input_string;
     std::string user_command;
     std::string parsed_user_command;
@@ -62,8 +359,6 @@ int main()
     int command_offset;
     int backslash_position;
 
-    // TODO: create if not exists
-    // TODO: print how much loaded
     std::string vocablurary = from_file(FILEPATH_STORAGE_VOCABLURARY);
     int memories_amount = get_amount_of_cached_memories(FILEPATH_STORAGE_NOTES);
     struct memory *memories = from_file(FILEPATH_STORAGE_NOTES, &memories_amount);
@@ -75,8 +370,6 @@ int main()
         << "/exit     \t\t\t\t exits the program"
         << std::endl;
 
-    // TODO: make a fancy, informative line (time, memories loaded, etc.)
-    // TODO: make it customasable
     char *time_buffer = (char *)malloc(sizeof(char) * TIME_BUFFER_MAXSIZE);
     to_string(time(0), TIME_FORMAT_FULL, time_buffer);
 
@@ -118,10 +411,6 @@ int main()
             }
             int user_input_id_to_remove = atoi(user_input_text.c_str());
 
-            // TODO: std::cout << "user input id parsed: " << user_input_id << "\n";
-            // TODO: actually search if id exists or not;
-            // TODO: do deletion only if such mem exists
-            // TODO: write down in terminal memo deleting data.
             // TODO: REFACTOR TO F-ing vectors.
             memories = remove(memories, memories_amount, user_input_id_to_remove);
             to_file(FILEPATH_STORAGE_NOTES, memories, --memories_amount);
@@ -220,6 +509,7 @@ int test_io_and_vector_functions_memory_rewritten() {
         std::string text_memory_repr = to_string(mem);
         std::cout << text_memory_repr << std::endl;
     }
+    return 0 ;
 }
 
 

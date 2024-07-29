@@ -1,5 +1,26 @@
 #include "memory.hpp"
 
+
+
+char *ltrim(char *s)
+{
+    while(isspace(*s)) s++;
+    return s;
+}
+
+char *rtrim(char *s)
+{
+    char* back = s + strlen(s);
+    while(isspace(*--back));
+    *(back+1) = '\0';
+    return s;
+}
+
+char *trim(char *s)
+{
+    return rtrim(ltrim(s)); 
+}
+
 void to_string(const time_t timestamp, const char *format, char *output_buffer)
 {
     tm tstruct = *localtime(&timestamp);
@@ -33,14 +54,19 @@ struct memory *deallocate(struct memory *mem)
     return nullptr;
 }
 
-// b - created, not allocated text field
-void copy(struct memory *a, struct memory *b)
-{
-    b->create = a->create;
-    b->edit = a->edit;
-    b->id = a->id;
-    b->text = new char[strlen(a->text) + 1];
-    strcpy(b->text, a->text);
+// b - created, not allocated text field 
+void copy(const struct memory &src, struct memory *dst) {
+    dst->create = src.create;
+    dst->edit = src.edit;
+    dst->id = src.id;
+    
+    // std::cout << "checkpoint 1.7" << std::endl;
+    // strlen(src->text);
+    //std::cout << "checkpoint 1.75" << std::endl;
+    // delete[] dst->text;
+
+    dst->text = (char*)malloc(sizeof(char)*strlen(src.text));//new char[strlen(src->text)];
+    strcpy(dst->text, src.text);
 }
 
 void to_string(struct memory *mem, char *output_buffer)
@@ -55,7 +81,7 @@ void to_string(struct memory *mem, char *output_buffer)
             MEMORY_FORMAT_PRINT,
             mem->id,
             time_buffer,
-            (char *)mem->text);
+            trim((char *)mem->text));
 }
 
 void to_string(struct memory *mem, float confidence, char *output_buffer)
@@ -71,7 +97,7 @@ void to_string(struct memory *mem, float confidence, char *output_buffer)
             confidence,
             mem->id,
             time_buffer,
-            (char *)mem->text);
+            trim((char *)mem->text));
 }
 
 std::string to_string(struct memory *r)
@@ -107,7 +133,7 @@ struct memory *add(struct memory *memories, int len, const struct memory *new_me
 }
 
 std::vector<memory *> add(
-    std::vector<memory *> memories,
+    std::vector<memory *> &memories,
     struct memory *new_memory)
 {
 
@@ -116,16 +142,15 @@ std::vector<memory *> add(
 }
 
 std::vector<memory *> remove(
-    std::vector<memory *> memories, int id)
+    std::vector<memory *> &memories, int id)
 {
     // TODO: use usual for loop
     int idx = 0;
-    for (auto mem : memories)
+    for (auto &mem : memories)
     {
         idx++;
         if (mem->id == id)
             memories.erase(memories.begin() + idx, memories.begin() + idx + 1);
-        // delete[] mem;
     }
     return memories;
 }
@@ -191,6 +216,7 @@ struct memory *edit(struct memory *memories, int len, const char *text, const in
             sprintf(memories[i].text, "%s", text);
             break;
         }
+    return memories;
 }
 
 /* Singular IO Operations*/
@@ -203,7 +229,7 @@ int write(
     return 0;
 }
 
-int read(FILE *f, memory *mem)
+int read(FILE *f, memory *mem) 
 {
     int creation_timestamp = 0;
     int edit_timestamp = 0;
@@ -248,8 +274,9 @@ std::vector<memory*> mem_from_file(std::string filename) {
             continue; 
         }
         std::getline(iss, line);
+
         mem->text = new char[line.size() + 1];
-        std::strcpy(mem->text, line.c_str());
+        std::strcpy(mem->text, (char*)line.c_str());
         memories.push_back(mem);
     }
     return memories;
@@ -263,6 +290,9 @@ void mem_to_file(std::string filename, std::vector<memory*> memories) {
                 << " " << (int)mem->create 
                 << " " << (int)mem->edit 
                 << " " << mem->text << "\n";
+            //std::cout << to_string(mem) << "\n";
+            //std::string str = std::string(mem->text) ;
+            //mem->text = ltrim(str).c_str();
         }
     } else {
         std::runtime_error("Failed to open file");

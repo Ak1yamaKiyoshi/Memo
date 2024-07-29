@@ -1,24 +1,32 @@
 #include "search.hpp"
+#include <algorithm>
 
 
 
 std::vector<search_result> sort_results(std::vector<search_result> results) {
-    // for (int i = 0; i < results.size(); i++) {
-    //     for (int j = 0; j < results.size(); j++) {
-    //         if (results[i].confidence < results[i+1].confidence) {
-    //             std::swap( results[i], results[i+1]);
-    //         }
-    //     }
-    // }
+    for (int i = 0; i < results.size()-1; i++) {
+        for (int j = 0; j < results.size()-1; j++) {
+            if (results[j].confidence < results[j+1].confidence) {
+                //std::swap( results[i], results[i+1]);
+                iter_swap(results.begin() + j, results.begin() + j + 1);
+            }
+        }
+    }
+    return results;
+}
 
-    // return results;
+std::vector<search_result> filter_results(std::vector<search_result> results) {
+    std::vector<search_result> new_filtered_results;
+    for (auto &res: results)
+        if (res.confidence > 0)
+            new_filtered_results.push_back(res);
+    return new_filtered_results;
 }
 
 
 std::vector<search_result> search(struct memory* memories, int len, std::string text_query, std::string vocablurary) {
     std::vector<search_result> results;
 
-    // std::cout <<"test-1";
     for (int i = 0; i < len; i++) {
         memory mem = memories[i];
         struct search_result result;
@@ -38,6 +46,7 @@ std::vector<search_result> search(struct memory* memories, int len, std::string 
         int queryStringLength = text_query.length();
         int vocStringLength = strlen(mem.text);
 
+        // Todo: use somehow symbolwise too
         // idk thats kinda magic to me
         float confidence = (float)levenshtain_distance(query, voc);
         float confidence_symbolwise = levenshtain_distance(mem.text, text_query);
@@ -54,5 +63,42 @@ std::vector<search_result> search(struct memory* memories, int len, std::string 
         results.push_back(result);
     }
 
+    return results;
+}
+
+
+std::vector<search_result> search(
+    std::vector<memory*> memories,
+    std::string text_query, std::string vocablurary
+)  {
+    std::vector<search_result> results;
+    for (auto mem: memories) {
+
+        search_result result;
+        result.mem = mem;
+        std::vector<int> query = sentence_vector(text_query, vocablurary);
+        std::vector<int> voc = sentence_vector(mem->text, vocablurary);
+             
+        int queryTokenLength = query.size();
+        int vocTokenLength = voc.size();
+        int queryStringLength = text_query.length();
+        int vocStringLength = strlen(mem->text);   
+
+        float confidence = (float)levenshtain_distance(query, voc);
+        float confidence_symbolwise = levenshtain_distance(mem->text, text_query);
+        float normalizedConfidence = confidence / (float)std::max(queryTokenLength, vocTokenLength);
+
+        float keywordScore = 0;
+        for (int i = 0; i < queryTokenLength; i++) {
+            if (std::find(voc.begin(), voc.end(), query[i]) != voc.end()) {
+                keywordScore += 1.0f / queryTokenLength;
+            }
+        }
+        result.confidence = keywordScore;
+        results.push_back(result);
+    }
+
+    results = sort_results(results);
+    results = filter_results(results);
     return results;
 }

@@ -14,3 +14,11 @@ std::vector<search_result> search(
     struct memory *memories, int len,
     std::string text_query, std::string vocablurary
 );
+
+std::vector<search_result> search(
+    std::vector<memory*> memories,
+    std::string text_query, std::string vocablurary
+);
+
+std::vector<search_result> sort_results(std::vector<search_result> results);
+std::vector<search_result> filter_results(std::vector<search_result> results);
