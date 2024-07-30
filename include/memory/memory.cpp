@@ -157,7 +157,7 @@ std::vector<memory *> remove(
 
 // Todo: make method to check if memory exists at all
 std::vector<memory *> edit(
-    std::vector<memory *> memories,
+    std::vector<memory *> &memories,
     std::string &text, const int id)
 {
 
@@ -167,11 +167,15 @@ std::vector<memory *> edit(
             memories[i]->edit = time(0);
 
             // TODO: review pls. memory leak???
-            memories[i]->text = (char *)text.c_str();
+            memories[i]->text = new char[text.length()];
+            strcpy(memories[i]->text, text.c_str());
+            
+            //(char *)text.c_str();
             break;
         }
     return memories;
 }
+
 
 // TODO: review or delete
 struct memory *remove(

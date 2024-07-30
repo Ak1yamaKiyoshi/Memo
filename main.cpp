@@ -7,11 +7,8 @@
 #include <iostream>
 #include <stdlib.h>
 #include <filesystem>
-
-#include <string> 
-
+#include <string>
 #include <algorithm>
-
 #include <cstdlib>
 
 void clear_screen()
@@ -20,47 +17,30 @@ void clear_screen()
     std::system("cls");
 #else
     // Assume POSIX
-    std::system ("clear");
+    std::system("clear");
 #endif
 }
 
-// Todo; calculate actual id for memory;
-
-// TODO: rewrite memories functions to vectors
-// TODO: test <algorythms>
-// TODO: test c++20
-// TODO: add build script
-// TODO: add configurable vocab and memories path to run anywhere
-// TODO: add coloring
-// TODO: add proper error warnings etc.
-// TODO: normalize string before vocablurary
-
+// IMPLEMENT term frequency-inverse document frequency instead of BOW
 // TODO: fix remove due it's saving broken memories
-
-// TODO: actually sort search results
 // TODO: add tags to search (#tags)
 // TODO: make actual unittests
-
 // TODO: multithreaded QT app after 3d iteration
-
-// Todo: rewrite using program state and separate functions;
 // TODO: undo option and cache to multiple files by sessions;
+// TODO: Translate memory struct from char* to string
+// TODO: ASCII art on start
+// TODO: case when removing last memory segfaults.
 
-
-// TODO: rewrite from C-style to C++ IO methods for memory
-// TODO: Translate memory struct from char* to string 
-
-// ASCII art on start 
-// Clear command 
-
-enum command_codes {
+enum command_codes
+{
     code_ok = 0,
-    code_exit=1,
-    code_error=2
+    code_exit = 1,
+    code_error = 2
 };
 
-enum message_codes {
-    message_ok = 'i', 
+enum message_codes
+{
+    message_ok = 'i',
     message_error = 'e',
     message_fail = 'x',
     message_neutral = 'n'
@@ -69,30 +49,34 @@ enum message_codes {
 bool __is_a_number(std::string s)
 {
     std::string::const_iterator it = s.begin();
-    while (it != s.end() && std::isdigit(*it))
-        ++it;
+    while (it != s.end() && std::isdigit(*it)) ++it;
     return !s.empty() && it == s.end();
 }
 
-int __is_file_exist(std::string filename) {
+int __is_file_exist(std::string filename)
+{
     std::ifstream file(filename.c_str());
-    if (file.good()) {
+    if (file.good())
+    {
         return code_ok;
-    } else {
+    }
+    else
+    {
         return code_error;
     }
 }
 
-int __touch(std::string filename) {
-    std::ofstream outfile (filename);
+int __touch(std::string filename)
+{
+    std::ofstream outfile(filename);
     outfile << " " << std::endl;
     outfile.close();
     return code_ok;
 }
 
-
 /**/
-void message(message_codes code, std::string message) {
+void message(message_codes code, std::string message)
+{
     std::string color;
     switch (code)
     {
@@ -100,7 +84,7 @@ void message(message_codes code, std::string message) {
         color = ANSI_YELLOW;
         break;
     case message_fail:
-        color = ANSI_RED;   
+        color = ANSI_RED;
         break;
     case message_ok:
         color = ANSI_GREEN;
@@ -109,127 +93,163 @@ void message(message_codes code, std::string message) {
         color = ANSI_WHITE;
         break;
     }
-    
+
     std::string resulting_message = color + std::string(" ") + (char)code + " " + message + ANSI_RESET + "\n";
     std::cout << resulting_message;
 }
 
-
-struct program_state {
+struct program_state
+{
     std::string last_user_cli_input;
     std::string last_user_command;
     std::string last_user_command_arguments;
-    
-    std::vector<memory*> memories;
+
+    std::vector<memory *> memories;
     std::string vocablurary;
 };
 
-int get_id(std::vector<memory*> memories) {
+int get_id(std::vector<memory *> memories)
+{
     int max_id;
-    int idx = 0; 
-    for (auto &mem: memories) {
-        if (idx == 0 || mem->id > max_id) {
+    int idx = 0;
+    for (auto &mem : memories)
+    {
+        if (idx == 0 || mem->id > max_id)
+        {
             max_id = mem->id;
         }
         idx++;
     }
-    
-    return max_id+1;
+
+    return max_id + 1;
 }
 
-void print_command(const std::string& command, const std::string& description) {
+void print_command(const std::string &command, const std::string &description)
+{
     std::cout << ANSI_BRIGHT_WHITE << command << ANSI_RESET << " - " << ANSI_GREEN << description << ANSI_RESET << "\n";
 }
 
-int command_help() {
+int command_help()
+{
     std::cout << "Command list:\n";
     print_command("/help", "Displays help information.");
     print_command("/add <text>", "Adds a new memory with optional tags.");
     print_command("/remove <id>", "Deletes a memory by its ID.");
-    print_command("/edit %<id> <text>", "Edits a memory with a new text.");
-    print_command("/clear" , "Clears terminal\n");
+    print_command("/edit <id> <text>", "Edits a memory with a new text.");
+    print_command("/clear", "Clears terminal\n");
     return code_ok;
 }
 
-int command_add(program_state &state) {
-    if (state.last_user_command_arguments.length() > 1) {
+int command_add(program_state &state)
+{
+    if (state.last_user_command_arguments.length() > 1)
+    {
         char *memory_text = new char[state.last_user_command_arguments.length()];
         strcpy(memory_text, state.last_user_command_arguments.c_str());
 
         memory *new_memory = create(memory_text, get_id(state.memories));
-        
+
         state.vocablurary = discover_words(state.last_user_command_arguments, state.vocablurary);
         to_file(FILEPATH_STORAGE_VOCABLURARY, state.vocablurary);
-    
+
         state.memories = add(state.memories, new_memory);
 
         mem_to_file(FILEPATH_STORAGE_NOTES, state.memories);
         message(message_ok, "Memory created and saved successfuly!");
         message(message_neutral, to_string(new_memory));
-        
+
         return code_ok;
-    } else {
+    }
+    else
+    {
         return code_error;
     }
 }
 
-struct memory* get_by_id(std::vector<memory*> memories, int to_search) {
+struct memory *get_by_id(std::vector<memory *> memories, int to_search)
+{
     // TODO: Rewrite to modern syntax
-    for (auto &mem: memories) {
-        if (mem->id == to_search) {
+    for (auto &mem : memories)
+    {
+        if (mem->id == to_search)
+        {
             return mem;
         }
     }
     return nullptr;
 }
 
-int command_edit(program_state &state) {
-    message(message_error, "Not implemented yet");
+int command_edit(program_state &state)
+{
+    std::string id_string, text;
+    std::stringstream iss(state.last_user_command_arguments);
+    iss >> id_string >> text;
+    if (__is_a_number(id_string)) {
+        int id = std::stoi(id_string);
+        
+        struct memory *desired_mem = get_by_id(state.memories, id);
+        if (desired_mem) {
+            std::string desired_mem_repr = to_string(desired_mem);
+            edit(state.memories, text, id);
+            message(message_ok, "Message edited succesfuly.");
+            message(message_neutral, "Before: " + desired_mem_repr);
+            desired_mem = get_by_id(state.memories, id);
+            message(message_neutral, "After:  " + to_string(desired_mem));
+        } else {
+            message(message_error, "There is no memory with such id.");
+        }
+    } else {
+        message(message_error, "Entered id is not a number");
+    }
     return code_ok;
 }
 
-int command_remove(program_state &state) {
-    if (!__is_a_number(state.last_user_command_arguments)) {
-        message(message_error, 
-            "You entered not valid id of memory to remove; Yours: " 
-            + state.last_user_command_arguments +"\n"
-        );
+int command_remove(program_state &state)
+{
+    if (!__is_a_number(state.last_user_command_arguments))
+    {
+        message(message_error,
+                "You entered not valid id of memory to remove; Yours: " + state.last_user_command_arguments + "\n");
         return code_error;
-    } 
+    }
 
     // Todo: add confirmation and printing of deleted memo;
     // Todo: check if idx exists
     // TODO: THERE IS A BUG WITH ID'S; ID"S CHANGING!
+    // Now thats a feature.
     int user_input_id_to_remove = atoi(state.last_user_command_arguments.c_str());
 
-
-    struct memory* desired_mem = get_by_id(state.memories, user_input_id_to_remove); 
+    struct memory *desired_mem = get_by_id(state.memories, user_input_id_to_remove);
     state.memories = remove(state.memories, user_input_id_to_remove);
 
     int cur_size = state.memories.size();
-    mem_to_file(FILEPATH_STORAGE_NOTES, state.memories);    
+    mem_to_file(FILEPATH_STORAGE_NOTES, state.memories);
     std::string id_str = std::to_string((int)user_input_id_to_remove);
-    if (!desired_mem) {
-        message(message_error, 
-            "Memory with id '" + id_str + "' does not exist."
-        );
-    } else {
-        message(message_ok,
-            "Memory \"\"\" " + to_string(desired_mem) + "\"\"\" is deleted/");
+    if (!desired_mem)
+    {
+        message(message_error,
+                "Memory with id '" + id_str + "' does not exist.");
     }
-    
+    else
+    {
+        message(message_ok,
+                "Memory \"\"\" " + to_string(desired_mem) + "\"\"\" is deleted/");
+    }
+
     return code_ok;
 }
 
-int command_clear(program_state &state) {
+int command_clear(program_state &state)
+{
     clear_screen();
     return code_ok;
 }
 
-int command_search(program_state &state) {    
+int command_search(program_state &state)
+{
     std::vector<search_result> results = search(
         state.memories,
-        state.last_user_command_arguments, 
+        state.last_user_command_arguments,
         state.vocablurary);
 
     std::string num = std::to_string(results.size());
@@ -243,23 +263,25 @@ int command_search(program_state &state) {
     return code_ok;
 }
 
-int command_exit(program_state &state) {
+int command_exit(program_state &state)
+{
     return code_exit;
 }
 
-int utility_get_input(program_state &state) {
-    
+int utility_get_input(program_state &state)
+{
+
     char *time_buffer = (char *)malloc(sizeof(char) * TIME_BUFFER_MAXSIZE);
     int command_offset = 0, backslash_position = 0;
-    
+
     to_string(time(0), TIME_FORMAT_FULL, time_buffer);
 
-    std::cout 
-    << "f("
-    <<  ANSI_BLUE << time_buffer 
-    <<  ANSI_RESET <<", " 
-    << ANSI_YELLOW << state.memories.size() 
-    << ANSI_RESET << ") is ";
+    std::cout
+        << "f("
+        << ANSI_BLUE << time_buffer
+        << ANSI_RESET << ", "
+        << ANSI_YELLOW << state.memories.size()
+        << ANSI_RESET << ") is ";
     getline(std::cin, state.last_user_cli_input);
 
     free(time_buffer);
@@ -268,11 +290,11 @@ int utility_get_input(program_state &state) {
     state.last_user_command = state.last_user_cli_input.substr(0, command_offset);
     backslash_position = state.last_user_command.rfind("/");
 
-    if (!backslash_position < 1) {
+    if (!backslash_position < 1)
+    {
         message(
             message_error,
-            "You may forgotten '/' when writing a command. "
-        );
+            "You may forgotten '/' when writing a command. ");
         return code_error;
     }
 
@@ -280,75 +302,102 @@ int utility_get_input(program_state &state) {
     state.last_user_command_arguments = state.last_user_cli_input.substr(
         command_offset + 1, state.last_user_cli_input.length() - 1);
 
-    // Todo: still possible to add /ad with '/add' only
-    if (state.last_user_command_arguments.length() < 1) {
+    // TODO: still possible to add /ad with '/add' only
+    // TODO: commands can be executed without a slash.
+    // TODO: exit codes are ignored 
+    if (state.last_user_command_arguments.length() < 1)
+    {
         message(message_fail, "The input is to short! Don't forget parameters.");
         return code_error;
     }
     return code_ok;
 }
 
-
-int utility_setup(program_state &state) {
-    if (__is_file_exist(FILEPATH_STORAGE_VOCABLURARY) == code_ok) {
+int utility_setup(program_state &state)
+{
+    if (__is_file_exist(FILEPATH_STORAGE_VOCABLURARY) == code_ok)
+    {
         state.vocablurary = from_file(FILEPATH_STORAGE_VOCABLURARY);
-    } else {
-        __touch(FILEPATH_STORAGE_VOCABLURARY);
-        message(message_error, 
-            "Vocablurary file '" + std::string(FILEPATH_STORAGE_VOCABLURARY) + "' does not exist. New one is created." 
-        );
     }
-    if (__is_file_exist(FILEPATH_STORAGE_NOTES) == code_ok) {
+    else
+    {
+        __touch(FILEPATH_STORAGE_VOCABLURARY);
+        message(message_error,
+                "Vocablurary file '" + std::string(FILEPATH_STORAGE_VOCABLURARY) + "' does not exist. New one is created.");
+    }
+    if (__is_file_exist(FILEPATH_STORAGE_NOTES) == code_ok)
+    {
         state.memories = mem_from_file(FILEPATH_STORAGE_NOTES);
-    } else {
+    }
+    else
+    {
         __touch(FILEPATH_STORAGE_NOTES);
-        message(message_error, 
-            "Memory storage file '" + std::string(FILEPATH_STORAGE_NOTES) + "' does not exist. New one is created."
-        );
+        message(message_error,
+                "Memory storage file '" + std::string(FILEPATH_STORAGE_NOTES) + "' does not exist. New one is created.");
     }
     return code_ok;
 }
 
-
-int utility_parse_command(program_state &state) {
+int utility_parse_command(program_state &state)
+{
     int output = -1;
-    if (!state.last_user_command.compare("add") ) {
+    if (!state.last_user_command.compare("add"))
+    {
+        // command_clear(state);
         output = command_add(state);
-    } else if (!state.last_user_command.compare("remove") ) {
+    }
+    else if (!state.last_user_command.compare("remove"))
+    {
+        // command_clear(state);
         output = command_remove(state);
-    } else if (!state.last_user_command.compare("edit") ) {
+    }
+    else if (!state.last_user_command.compare("edit"))
+    {
+        //command_clear(state);
         output = command_edit(state);
-    } else if (!state.last_user_command.compare("search") ) {
+    }
+    else if (!state.last_user_command.compare("search"))
+    {
+        //command_clear(state);
         output = command_search(state);
-    } else if (!state.last_user_command.compare("exit")) {
+    }
+    else if (!state.last_user_command.compare("exit"))
+    {
+        // command_clear(state);
         output = command_exit(state);
-    } else if (!state.last_user_command.compare("clear")) {
+    }
+    else if (!state.last_user_command.compare("clear"))
+    {
+        // command_clear(state);
         output = command_clear(state);
-    } else if (!state.last_user_command.compare("help")) { 
+    }
+    else if (!state.last_user_command.compare("help"))
+    {
+        // command_clear(state);
         output = command_help();
-    } else {
-        message(message_error, 
-            "Your command does not match any of existing ones. Your command is '" + state.last_user_command + "'."
-        );
+    }
+    else
+    {
+        message(message_error,
+                "Your command does not match any of existing ones. Your command is '" + state.last_user_command + "'.");
     }
     return output;
 }
 
-
-
-int main() {
+int main()
+{
     program_state state;
     command_help();
     utility_setup(state);
-    while (1) {
-        
+    while (1)
+    {
+
         utility_get_input(state);
         if (utility_parse_command(state) == code_exit)
             break;
     }
     return code_ok;
 }
-
 
 int _main_v1()
 {
@@ -465,19 +514,19 @@ int _main_v1()
     return 0;
 }
 
-
-
-int test_io_and_vector_functions_memory_rewritten() {
-    std::vector <memory*> memories;
+int test_io_and_vector_functions_memory_rewritten()
+{
+    std::vector<memory *> memories;
     memory *mem0 = create("text0", 1);
     memory *mem1 = create("text1", 2);
     memory *mem2 = create("text2", 3);
-    
+
     memories = add(memories, mem0);
     memories = add(memories, mem1);
     memories = add(memories, mem2);
 
-    for (auto mem: memories) {
+    for (auto mem : memories)
+    {
         std::string text_memory_repr = to_string(mem);
         std::cout << text_memory_repr << std::endl;
     }
@@ -485,7 +534,8 @@ int test_io_and_vector_functions_memory_rewritten() {
     memories = remove(memories, 2);
     std::cout << "\n";
 
-    for (auto mem: memories) {
+    for (auto mem : memories)
+    {
         std::string text_memory_repr = to_string(mem);
         std::cout << text_memory_repr << std::endl;
     }
@@ -494,25 +544,25 @@ int test_io_and_vector_functions_memory_rewritten() {
     memories = edit(memories, text, 1);
     std::cout << "\n";
 
-    for (auto mem: memories) {
+    for (auto mem : memories)
+    {
         std::string text_memory_repr = to_string(mem);
         std::cout << text_memory_repr << std::endl;
     }
 
     mem_to_file(
-        std::string("test.txt"), memories
-    );
+        std::string("test.txt"), memories);
 
     std::cout << "\nFrom file: \n";
-    std::vector<memory*> test;
+    std::vector<memory *> test;
     test = mem_from_file(std::string("test.txt"));
-    for (auto mem: test) {
+    for (auto mem : test)
+    {
         std::string text_memory_repr = to_string(mem);
         std::cout << text_memory_repr << std::endl;
     }
-    return 0 ;
+    return 0;
 }
-
 
 int test_levenshtain_distance()
 {

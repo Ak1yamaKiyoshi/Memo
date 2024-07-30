@@ -1,61 +1,41 @@
 #include <iostream>
-#include <iomanip>  // for std::hex and std::showbase
-#include <string>
+#include <numeric>
+#include <vector>
+#include <algorithm>
+#include <functional>
+#include <math.h>
+#include <locale>
 
-
-// int to_lowercase( char c) {
-//     if (isalpha(c)) {
-//         return tolower(c);
-//     }
-
-// }
-
+#include "include/memory/memory.cpp"
+#include "include/vocablurary/vocablurary.cpp"
+#include "include/levenshtain/levenshtain.cpp"
+#include "src/search.cpp"
+#include "include/coloring.hpp"
+#include "include/vector_utils/vectors.hpp"
 
 /*
-    //"абвгґдеєжзиіїйклмнопрстуфхцчшщьюя"
-    //
-*/
-
-
-
-
-
 int main() {
-    const std::string uppercase = "АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ"; //
-    const std::string lowercase = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя";
+    std::string t1 = "Хіхіхаха";
+    std::string t2 = "гімна поїж";
 
-    std::cout <<( (char32_t)uppercase[1]) << " " << (char32_t)'В';//== (char16_t)'А');
-    //std::string((char32_t)'г');
-    // std::cout << uppercase.c_str() << std::endl;
-    // for (int i = 0; i < uppercase.length(); i++) {
-    //     //printf("%c", 65436);
-    //     std::cout << uppercase.c_str()[i] << " ";
-    //}
-    
-    /*
-    // Define a string containing the characters
-    std::string text = "АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ";
-    setlocale(LC_ALL, "ukranian");
-    
-    // Iterate through each character in the string
-    for (size_t i = 0; i < text.size(); ++i) {
-        // Get the character at the current position
-        char ch = static_cast<char>(text[i]);
+    std::string voc = from_file(FILEPATH_STORAGE_VOCABLURARY);
+    voc = discover_words(t1, voc);
+    voc = discover_words(t2, voc);
 
-        // Print the character and its integer (decimal and hexadecimal) representation
-        std::cout << "Character: " << text[i]
-                  << " | Integer (decimal): " << static_cast<int>(ch)
-                  << " | Integer (hex): " << std::hex << std::showbase << static_cast<int>(ch)
-                  << std::dec << std::endl;  // Reset to decimal
-    }
+    std::vector<int> v1 = sentence_vector(t1, voc);
+    std::vector<int> v2 = sentence_vector(t2, voc);
 
-    std::cout <<text;
-    
-    */
-    // std::string txt = "d";
-    // std::cout << isalpha(txt[0]);
+    std::cout << "Vec 1:" << std::endl;
+    for (auto num: v1) std::cout << num << " ";
+    std::cout << std::endl;
+
+    std::cout << "Vec 2:" << std::endl;
+    for (auto num: v2) std::cout << num << " ";
+    std::cout << std::endl;
+
+    std::cout << "Similarity: " << weuclidian_distance(v1, v2) << std::endl;
 
     return 0;
 }
 
-
+*/

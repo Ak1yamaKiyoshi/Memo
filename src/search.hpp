@@ -1,7 +1,13 @@
-#pragma once
+//#pragma once
 #include "../include/levenshtain/levenshtain.hpp"
 #include "../include/memory/memory.hpp"
 #include "../include/vocablurary/vocablurary.hpp"
+#include "../include/vector_utils/vectors.hpp"
+#include "../include/string_utils/utils.hpp"
+
+#include <algorithm>
+#include <numeric>
+#include <vector>
 
 
 struct search_result {

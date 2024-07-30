@@ -59,7 +59,7 @@ std::vector<memory *> remove(
     std::vector<memory *> &memories, int id);
 
 std::vector<memory *> edit(
-    std::vector<memory *> memories,
+    std::vector<memory *> &memories,
     std::string &text, const int id);
 
 /* Singular IO Operations */

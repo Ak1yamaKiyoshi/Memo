@@ -24,13 +24,15 @@ The code is messy and buggy. Use at your own risk. All of us have a life outside
 **Compile:**
 
 ```bash
-g++ -o memories ./main.cpp
+chmod +x ./build.sh
+./build.sh
 ```
 
 **Run:**
 
 ```bash
-./memories
+chmod +x ./run.sh
+./run.sh
 ```
 
 **Commands:**
