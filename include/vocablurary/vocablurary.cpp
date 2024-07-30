@@ -1,6 +1,6 @@
 #include "vocablurary.hpp"
 #include <fstream>
-
+#include <map>
 /* Word Operations */
 
 int word_id(std::string word, std::string vocablurary)
@@ -23,9 +23,7 @@ int word_id(std::string word, std::string vocablurary)
 
 std::string remove_special_characters(std::string &text) {
     text.erase(std::remove_if(text.begin(), text.end(),
-        [](char c) {
-            return (std::isalpha(c) || std::isspace(c) || SPECIAL_CHARACTERS.find(c) != std::string::npos);
-        }),
+        [](char c) { return (std::isspace(c) || SPECIAL_CHARACTERS.find(c) != std::string::npos);}),
         text.end());
     return text;
 }
@@ -40,10 +38,8 @@ std::string discover_words(std::string sentence, std::string vocablurary)
     int found_word_id = -1;
     while (ss >> buffer) {
         found_word_id = word_id(buffer, vocablurary);
-        if (found_word_id == -1) {
-            // TODO: prerpocess, remove commas? 
+        if (found_word_id == -1) { 
             new_vocablurary_ss << " " << remove_special_characters(buffer);
-            //std::cout << buffer << "\n";
         }
     }
     

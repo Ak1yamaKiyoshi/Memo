@@ -174,6 +174,7 @@ int command_add(program_state &state) {
 }
 
 struct memory* get_by_id(std::vector<memory*> memories, int to_search) {
+    // TODO: Rewrite to modern syntax
     for (auto &mem: memories) {
         if (mem->id == to_search) {
             return mem;
@@ -200,7 +201,7 @@ int command_remove(program_state &state) {
     // Todo: check if idx exists
     // TODO: THERE IS A BUG WITH ID'S; ID"S CHANGING!
     int user_input_id_to_remove = atoi(state.last_user_command_arguments.c_str());
-    int prev_size = state.memories.size();
+
 
     struct memory* desired_mem = get_by_id(state.memories, user_input_id_to_remove); 
     state.memories = remove(state.memories, user_input_id_to_remove);
@@ -261,7 +262,7 @@ int utility_get_input(program_state &state) {
     << ANSI_RESET << ") is ";
     getline(std::cin, state.last_user_cli_input);
 
-    delete time_buffer;
+    free(time_buffer);
 
     command_offset = state.last_user_cli_input.find(" ");
     state.last_user_command = state.last_user_cli_input.substr(0, command_offset);

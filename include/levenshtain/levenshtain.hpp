@@ -5,9 +5,10 @@
 
 
 
-const float COST_INSERT = 1;
-const float COST_REPLACE = 1;
-const float COST_REMOVE = 1;
+const float COST_INSERT = 5;
+const float COST_REPLACE = 3;
+const float COST_REMOVE = 10;
+const float COST_MAX_OF_THEM = COST_REMOVE;
 
 
 int levenshtain_distance(

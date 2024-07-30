@@ -72,21 +72,25 @@ std::vector<search_result> search(
     std::string text_query, std::string vocablurary
 )  {
     std::vector<search_result> results;
+    if (memories.size() == 0) {
+        return results;
+    }
+    
     for (auto mem: memories) {
 
         search_result result;
         result.mem = mem;
         std::vector<int> query = sentence_vector(text_query, vocablurary);
-        std::vector<int> voc = sentence_vector(mem->text, vocablurary);
+        std::vector<int> voc = sentence_vector(trim(mem->text), vocablurary);
              
         int queryTokenLength = query.size();
         int vocTokenLength = voc.size();
         int queryStringLength = text_query.length();
         int vocStringLength = strlen(mem->text);   
 
-        float confidence = (float)levenshtain_distance(query, voc);
-        float confidence_symbolwise = levenshtain_distance(mem->text, text_query);
-        float normalizedConfidence = confidence / (float)std::max(queryTokenLength, vocTokenLength);
+        float confidence = (float)levenshtain_distance(query, voc) / ((float)query.size()*COST_MAX_OF_THEM );
+        float confidence_symbolwise = levenshtain_distance(mem->text, text_query) / (text_query.length()*COST_MAX_OF_THEM);
+
 
         float keywordScore = 0;
         for (int i = 0; i < queryTokenLength; i++) {
@@ -94,7 +98,14 @@ std::vector<search_result> search(
                 keywordScore += 1.0f / queryTokenLength;
             }
         }
-        result.confidence = keywordScore;
+
+        
+        float condifence_normalized = (confidence_symbolwise*0.2+ confidence*0.2 + keywordScore*0.6)/2;
+        std::cout << "= = = - " << trim(mem->text) << std::endl;
+        std::cout << "confidence   : " << confidence << std::endl;
+        std::cout << "symbolwise   : " << confidence_symbolwise << std::endl;
+        std::cout << "normalized   : " << condifence_normalized << std::endl;
+        result.confidence = condifence_normalized;
         results.push_back(result);
     }
 
