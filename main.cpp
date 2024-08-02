@@ -3,6 +3,8 @@
 #include <regex>
 #include <codecvt>
 #include <iostream>
+#include <iomanip> 
+#include <ctime>   
 
 
 const std::string TAG_REGEX = "#{1}[A-zА-яі]+";
@@ -51,6 +53,16 @@ std::string remove_special_characters_from_string(const std::string &text, const
     return iss.str();
 }
 
+std::vector<std::string> split_by_space(const std::string &str) {
+    std::vector<std::string> terms;
+    std::stringstream iss(str);
+    while (1) {
+        std::string buffer;
+        if (!(iss >> buffer)) break;
+        else terms.push_back(buffer);
+    }
+    return terms;
+}
 
 struct memo {
     std::string text;
@@ -64,6 +76,43 @@ struct memo {
 
     std::vector<int> linked_memories;
 };
+
+
+void debug_print_memo(const memo* mem) {
+    if (mem == nullptr) {
+        std::cerr << "Error: memo is null." << std::endl;
+        return;
+    }
+
+    std::string output;
+    output += "Text: " + mem->text + "\n";
+
+    output += "Tags: ";
+    for (const auto& tag : mem->tags) {
+        output += tag + " ";
+    }
+    output += "\n";
+
+    auto print_time = [](time_t time_val) {
+        struct tm* time_info;
+        char buffer[80];
+        time_info = localtime(&time_val);
+        strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", time_info);
+        return std::string(buffer);
+    };
+
+    output += "Created: " + print_time(mem->created) + "\n";
+    output += "Last Edited: " + print_time(mem->last_edited) + "\n";
+
+    output += "Viewed Times: " + std::to_string(mem->viewed_times) + "\n";
+    output += "Memo ID: " + std::to_string(mem->memo_id) + "\n";
+    output += "Linked Memories: ";
+    for (const auto& id : mem->linked_memories) {
+        output += std::to_string(id) + " ";
+    }
+    output += "\n";
+    std::cout << output;
+}
 
 template<typename T>
 std::string join(const std::vector<T> &vec, const std::string &delimiter) {
@@ -99,13 +148,37 @@ void write_memo(T &out, const memo* mem, std::string delimiter = "|") {
         << mem->tags.size() << delimiter
         << join(mem->tags, " ") << delimiter
         << mem->linked_memories.size() << delimiter
-        << join(mem->linked_memories, " ") << std::endl;
+        << join(mem->linked_memories, " ") << delimiter << std::endl;
 }
 
 template<typename T>
-void read_memo(T &in, const memo* mem, std::string delimiter = "|") {
+memo* read_memo(T &in, std::string delimiter = "|") {
     std::string buffer;
     getline(in, buffer);
+    std::vector<std::string> tokens;
+    size_t pos = 0;
+    std::string token;
+    while ((pos = buffer.find(delimiter)) != std::string::npos) {
+        token = buffer.substr(0, pos);
+        tokens.push_back(token);
+        buffer.erase(0, pos + delimiter.length());
+    }
+std::cout << std::endl;
+    memo* mem = new memo();
+    mem->viewed_times = std::stoi(tokens[0]);
+    mem->last_edited = (time_t)std::stoi(tokens[1]);
+    mem->created = (time_t)std::stoi(tokens[2]);
+    mem->memo_id = std::stoi(tokens[3]);
+    mem->text = tokens[4+1];
+    mem->tags = split_by_space(tokens[6+1]);
+    std::vector<int> linked_memories;
+    std::vector<std::string> linked_memories_str = split_by_space(tokens[9]);
+
+    for (auto &str_val: linked_memories_str)  {
+        linked_memories.push_back(std::stoi(str_val)); 
+    }
+    mem->linked_memories = linked_memories;
+    return mem;
 }
 
 struct search_result {
@@ -118,11 +191,20 @@ struct search_result {
 int main() {
     std::stringstream iss;
     std::string delimiter = "|";
-    memo * mem = create_memo("text", 1);
+    std::vector<int > linked = {1, 3, 1, 2, 4};
+    memo * mem = create_memo("text #tag b #vss", 1, linked);
+    debug_print_memo(mem);
 
+    std::cout << std::endl;
+    
     write_memo(iss, mem);
+    memo* mem1 = read_memo(iss);
 
-    std::cout << iss.str() << std::endl;
+    debug_print_memo(mem1);
+
+    std::cout << std::endl;
+
+    std::cout << "iss: " << iss.str() << std::endl;
 
     return 0;
 }
