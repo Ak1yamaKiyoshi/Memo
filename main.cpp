@@ -423,7 +423,7 @@ std::vector<memo*> memories_read_all_w(std::string filename) {
     std::vector<memo*> memories;
     
     std::ifstream file(filename.c_str(), std::ios::in);
-    
+
     if(!file.is_open()) return memories;
     memories = memories_read_all(file);
     file.close();
@@ -544,7 +544,7 @@ std::string trim(std::string str) {
 }
 
 std::string to_view_string(std::string str) {
-    return trim(remove_redundant_spaces(remove_tags_from_string(str)));
+    return trim(remove_redundant_spaces(str));
 }
 
 enum codes {
@@ -591,13 +591,6 @@ void copy(memo*dst, memo*src) {
     dst->viewed_times = src->viewed_times;
 }
 
-void program_setup();
-void command_help();
-void command_add();
-void command_remove();
-void command_update();
-void command_clear();
-void command_ascii_art();
 
 
 int main() {
@@ -609,10 +602,24 @@ int main() {
     }
 
     std::string user_input, command, arguments;
+    
     std::vector<memo*> memories = memories_read_all_w(filename_memories);
-
-    while (true) {
+    
+    time_t a = time(0)-10000;
+    bool is_running = true;
+    while (is_running) {
+        time_t b = a;
+        a = time(0);
+        double diff = difftime(a, b);
+        if (diff < 0.020) {
+            message(error_program_side, "Too fast iteration. Suspect of endless loop. Exiting."); 
+            return -1;
+        } 
         
+        memories_write_all_w(filename_memories, memories);
+        memories = memories_read_all_w(filename_memories);
+        
+        std::cin.sync();
         std::cout << "|" << memories.size() << "> ";
         getline(std::cin, user_input);
 
@@ -621,11 +628,12 @@ int main() {
         if (command.length() == 0) {
             message(error_user_side, "Entered command is too short.");
             continue;
-        } else if (trim(arguments).length() == 0) {
-            message(error_user_side, "You provided no arguments.");
-            continue;
         }
         if (!command.compare("/add") || !command.compare("/a")) {
+            if (trim(arguments).length() == 0) {
+                message(error_user_side, "You provided no arguments.");
+                continue;
+            }
             int id = memories_get_new_id(memories);
             memo* mem = create_memo(arguments, id);
             if (!memories_add(mem, memories)) {
@@ -634,9 +642,16 @@ int main() {
                 message(ok, "Memory successfuly created");
                 message(display, "Created memory: " + to_view_string(memo_to_stringc(mem)));
             }
+        
         } else if (!command.compare("/repetition") || !command.compare("/i")) {
         } else if (!command.compare("/search") || !command.compare("/s"))     {
+        } else if (!command.compare("/exit") || !command.compare("/e"))     {
+            break;
         } else if (!command.compare("/remove") || !command.compare("/r"))     {
+            if (trim(arguments).length() == 0) {
+                message(error_user_side, "You provided no arguments.");
+                continue;
+            }
             std::stringstream iss(arguments);
             std::string id_str;
             int id = 0; iss >> id_str;
@@ -657,6 +672,10 @@ int main() {
             message(ok, buffer);
 
         } else if (!command.compare("/update") || !command.compare("/u")) {
+            if (trim(arguments).length() == 0) {
+                message(error_user_side, "You provided no arguments.");
+                continue;
+            }
             std::stringstream iss(arguments);
             std::string id_str, text;
             int id = 0; iss >> id_str;
@@ -692,8 +711,6 @@ int main() {
         } else {
             message(error_user_side, "There is no such command.");
         }
-
-        memories_write_all_w(filename_memories, memories);
     };
 
     return 0;
@@ -728,8 +745,6 @@ void glove();
 void search(); // multiprocessing if multiple search models used;
 void metric(); // function pointers?
 
-
-void get_command_prompt();
 
 */
 // Features: search as type goes

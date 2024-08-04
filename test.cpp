@@ -1,179 +1,357 @@
-
-
-#include <vector>
-#include <ctime>
-#include <ctime>
 #include <iostream>
-#include <string>
-#include <ctime>
-#include <time.h>
 #include <sstream>
-#include <iomanip>
-#include <stdlib.h> 
+
 #include <vector>
-#include <string>
+#include <codecvt>
+#include <set>
+#include <bits/stdc++.h>
+#include <vector>
+#include <math.h>
+
+const std::string SPECIAL_CHARACTERS = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 
 
 
-std::string weekday_to_string(int i) {
-    std::vector<std::string> weekdays = {"Monday", "Tueday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
-
-
-    std::string buffer;
-    if (i < 7)
-        buffer += weekdays[i];
-    return buffer;
-}
-
-std::string month_to_string(int i) {
-    std::vector<std::string> months = {
-        "January", 
-        "February", 
-        "March", 
-        "April", 
-        "May", 
-        "June", 
-        "July", 
-        "August", 
-        "September", 
-        "October", 
-        "November", 
-        "December"
-    };
-
-    std::string buffer;
-    if (i < 12)
-        buffer += months[i];
-    return buffer;
-}
-
-std::string time_to_string(const time_t timestamp, const char *format) {
-    char *output_buffer = new char[90];
-    tm tstruct = *localtime(&timestamp);
-    strftime(output_buffer, 90, format, &tstruct);
-    return std::string(output_buffer);
-}
-
-std::string center(std::string input, int width = 113) { 
-    return std::string((width - input.length()) / 2, ' ') + input;
-}
-
-
-
-std::string make_fixed_width_string(const std::string& input, size_t width) {
-    std::ostringstream oss;
-    oss << std::left << std::setw(width) << std::setfill(' ') << input;
-    return oss.str().substr(0, width);
-}
-
-
-
-
-std::string time_to_string_verbose(const time_t& current, const time_t& past) {
-    std::tm curs{};
-    std::tm pasts{};
-    
-    #if defined(_WIN32) || defined(_WIN64)
-        localtime_s(&curs, &current);
-        localtime_s(&pasts, &past);
-    #else
-        localtime_r(&current, &curs);
-        localtime_r(&past, &pasts);
-    #endif
-
-    std::stringstream iss;
-
-    int days_ago_same_year = curs.tm_yday - pasts.tm_yday;
-    
-    if (curs.tm_yday == pasts.tm_yday && curs.tm_year == pasts.tm_year) {
-        iss << "Today at " << std::setw(2) << std::setfill('0')
-            << pasts.tm_hour << ":" << std::setw(2) << std::setfill('0')
-            << pasts.tm_min;
-    } else if (days_ago_same_year == 1 && curs.tm_year == pasts.tm_year) {
-        iss << "Yesterday at "
-            << std::setw(2) << std::setfill('0') << pasts.tm_hour << ":"
-            << std::setw(2) << std::setfill('0') << pasts.tm_min;
-    } else if (curs.tm_yday / 7 == pasts.tm_yday / 7 && curs.tm_year == pasts.tm_year) {
-        iss << weekday_to_string(pasts.tm_wday) << " "
-            << std::setw(2) << std::setfill('0') << pasts.tm_hour << ":"
-            << std::setw(2) << std::setfill('0') << pasts.tm_min;
-    } else if (curs.tm_mon == pasts.tm_mon) {
-        iss << days_ago_same_year << " days ago at "
-            << pasts.tm_mday << (pasts.tm_mday == 1 ? "st" : 
-                                 pasts.tm_mday == 2 ? "nd" : 
-                                 pasts.tm_mday == 3 ? "rd" : "th") << " "
-            << std::setw(2) << std::setfill('0') << pasts.tm_hour << ":"
-            << std::setw(2) << std::setfill('0') << pasts.tm_min;
-
-    } else if (curs.tm_year == pasts.tm_year) {
-        iss << pasts.tm_mday << (pasts.tm_mday == 1 ? "st" : 
-                                 pasts.tm_mday == 2 ? "nd" : 
-                                 pasts.tm_mday == 3 ? "rd" : "th") << " of "
-            << month_to_string(pasts.tm_mon) + " "
-            << std::setw(2) << std::setfill('0') << pasts.tm_hour << ":"
-            << std::setw(2) << std::setfill('0') << pasts.tm_min;
-    } else {
-        iss << time_to_string(past, "%Y-%m-%d %H:%M:%S");
+template<typename T>
+std::vector<T> pad_vector(std::vector<T> &vec, const int desired_length, const int filler=-10) {
+    while (vec.size() < (unsigned long)desired_length) {
+        vec.push_back((T)filler);
     }
-
-    return make_fixed_width_string(center(iss.str(), 25), 25);
+    return vec;
 }
 
+
+double vector_dot_product(const std::vector<float> &a, const std::vector<float> &b) {
+    if (! (a.size() == b.size())) return 0.0;
+    double sum = 0;
+    for (int i = 0; (unsigned long)i < a.size(); i++)
+        sum += a[i] * b[i];
+    return sum; 
+}
+
+double vector_magnitude(const std::vector<float> &vec) {
+    double sum = 0;
+    for (int i = 0; (unsigned long)i < vec.size(); i++)
+        sum += pow(vec[i], 2);
+    return std::sqrt(sum);
+}
+
+double cosine_similarity(const std::vector<float> &a, const std::vector<float> &b) {
+    return vector_dot_product(a, b) / (vector_magnitude(a) * vector_magnitude(b));
+};
+
+double wcosine_similarity(std::vector<float> a, std::vector<float> b) {
+    unsigned long desired = std::max(a.size(), b.size());
+    a = pad_vector(a, desired, 0);
+    b = pad_vector(b, desired, 0);
+    return cosine_similarity(a, b);
+}
+
+void discover(const std::string &ngram, std::vector<std::string> &terms)
+{
+    if ((std::find(terms.begin(), terms.end(), ngram) == terms.end()))
+        terms.push_back(ngram);
+}
+
+std::string remove_spaces(std::string str) {
+    std::regex spaces_regex("[ ]+");
+    return std::regex_replace(str, spaces_regex, "");
+}
+
+
+std::vector<std::string> to_ngrams(
+    const std::string &sentence,
+    std::vector<std::string> &terms,
+    int n)
+{
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+    std::u32string utf32_sentence = converter.from_bytes(sentence);
+
+    std::vector<std::string> ngrams;
+    std::string ngram;
+
+    int offset = 0;
+    int counter = 1;
+    while (offset < utf32_sentence.length()) {
+        ngram = converter.to_bytes(utf32_sentence.substr(offset, counter));
+        if (counter < n) counter++;
+        offset += 1;
+        ngrams.push_back(ngram);
+        discover(ngram, terms);
+    }
+    return ngrams;
+}
+
+std::string remove_special_characters(std::string &text) {
+    text.erase(std::remove_if(text.begin(), text.end(),
+        [](char c) { return (SPECIAL_CHARACTERS.find(c) != std::string::npos);}),
+        text.end());
+    return text;
+}
 
 /*
-    default: year, month, day, minutes
-    if current year: 
-        month, day, hours, minutes
-    if current month: 
-        n-days ago, day, hours, minutes
-    if current week:
-        weekday, hours, minutes
-    if yesterday:
-        'yesterday', hours, minutes
+std::vector<int> foo = {25,15,5,-5,-15};
+std::vector<int> bar;
+
+// copy only positive numbers:
+std::copy_if (foo.begin(), foo.end(), std::back_inserter(bar), [](int i){return i>=0;} );
+
 */
 
+std::string tolower_curlocale(std::string &str) {
+    std::locale loc("");
 
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+    std::wstring wide = converter.from_bytes(str);
+
+    std::transform(
+        wide.begin(), wide.end(), wide.begin(), 
+        [&loc](wchar_t c) {
+            return std::tolower(c, loc);
+    });
+    return converter.to_bytes(wide);
+}
+
+std::string normalize_string(std::string &str) {
+    str = tolower_curlocale(str);
+    str = remove_special_characters(str);
+    return str;
+}
+
+std::set<std::string> vector2set(const std::vector<std::string> &v) {
+    std::set<std::string> set;
+    for (auto e: v) set.insert(e);
+    return set;
+} 
+
+std::vector<std::string> set2vector(const std::set<std::string> &s) {
+    std::vector<std::string> vec(s.begin(), s.end());
+    return vec;
+}
+
+
+std::vector<std::string> split_by_space(const std::string &str) {
+    std::vector<std::string> terms;
+    std::stringstream iss(str);
+    while (1) {
+        std::string buffer;
+        if (!(iss >> buffer)) break;
+        else terms.push_back(buffer);
+    }
+    return terms;
+}
+
+std::string vec2string(const std::vector<std::string> &vec, std::string delimiter=" ") {
+    std::stringstream iss;
+    for (int i = 0; (unsigned long)i < vec.size(); i++) 
+        iss << vec[i] << delimiter;
+    return iss.str();
+}
+
+float term_frequency(const std::string &term, const std::vector<std::string> &document) {
+    int frequency_in_text = std::count(document.begin(), document.end(), term);
+    int total_terms_in_text = document.size();
+    return (float)frequency_in_text/total_terms_in_text;
+}
+
+float inverse_document_frequency(
+    const std::string &term,
+    std::vector<std::vector<std::string>> documents
+) {
+    int documents_containing_term = 0;
+    int total_number_of_docs = documents.size();
+    for (const auto &document: documents)
+        if ((std::find(document.begin(), document.end(), term) != document.end())) 
+            documents_containing_term++;
+    if (documents_containing_term == 0) return 0.00000001;
+
+    return std::log(total_number_of_docs) / documents_containing_term;
+}
+
+std::vector<float> tfidf(std::string query, std::vector<std::vector<std::string>> documents, int splitsize=3, bool use_ngrams=true) {
+    std::vector<std::string> corpus;
+    std::vector<float> tfidf_query;
+    if (use_ngrams) {
+        for (auto &term: to_ngrams(normalize_string(query), corpus, splitsize)) {
+            std::vector<std::string> document_terms = to_ngrams(normalize_string(query), corpus, splitsize);
+            float tf = term_frequency(term, document_terms);
+            float idf = inverse_document_frequency(term, documents);
+            float _tfidf = tf * idf;
+            tfidf_query.push_back(_tfidf);
+        }
+    } else {
+        for (auto &term: split_by_space(normalize_string(query))) {
+            std::vector<std::string> document_terms = split_by_space(normalize_string(query));
+            float tf = term_frequency(term, document_terms);
+            float idf = inverse_document_frequency(term, documents);
+            float _tfidf = tf * idf;
+            tfidf_query.push_back(_tfidf);
+        }
+    }
+
+    return tfidf_query;
+}
+struct search_result {
+    std::vector<std::string> document;
+    float confidence;
+};
+
+
+std::vector<search_result> sort_results(std::vector<search_result> results) {
+    for (int i = 0; i < (int)results.size()-1; i++) {
+        for (int j = 0; j < (int)results.size()-1; j++) {
+            if (results[j].confidence < results[j+1].confidence) {
+                iter_swap(results.begin() + j, results.begin() + j + 1);
+            }
+        }
+    }
+    return results;
+}
+
+
+
+
+int word_to_id(const std::string &word, std::vector<std::string> &terms) {
+    auto result = std::find(terms.begin(), terms.end(), word); 
+    if ((result == terms.end())) return -1;
+    else return (int)(result - terms.begin());
+}
+
+std::string remove_redundant_spaces(std::string str) {
+    std::regex spaces_regex("[ ]+");
+    return std::regex_replace(str, spaces_regex, " ");
+}
+
+std::vector<int> sentence_to_vector(std::string&sentence, std::vector<std::string> &terms) {
+    std::vector<std::string> words = split_by_space(remove_redundant_spaces(remove_special_characters(sentence)));
+    std::vector<int> resulting_vector;
+    for (const auto &word: words) resulting_vector.push_back(word_to_id(word, terms));
+    return resulting_vector;
+}
+
+std::vector<int> vectorize(std::string sentence, std::vector<std::string> &terms, int n =-1 ) {
+    if (n != -1) {
+        std::vector<std::string> ngrams = to_ngrams(sentence, terms, n);
+        for (const std::string &term: ngrams) discover(term, terms);
+        std::string ngrams_str = vec2string(ngrams);
+        return sentence_to_vector(ngrams_str, terms);
+    } else {
+        std::string normalized = normalize_string(sentence);
+        for (auto word: split_by_space(sentence)) discover(word, terms);
+        return sentence_to_vector(normalized, terms);
+    }
+}
+
+std::vector<int> filter(std::vector<int> a) {
+    std::vector<int> b;
+    std::copy_if (a.begin(), a.end(), std::back_inserter(b), [](int i){return i>=0;} );
+    return b;
+}
+
+float levenshtain_distance(
+    std::vector<int> a,
+    std::vector<int> b)
+{
+    int m = a.size();
+    int n = b.size();
+
+    std::vector<int> prevRow(n + 1, 0);
+    std::vector<int> currRow(n + 1, 0);
+
+    for (int j = 0; j <= n; j++)
+        prevRow[j] = j;
+
+    for (int i = 1; i <= m; i++)
+    {
+        currRow[0] = i;
+        for (int j = 1; j <= n; j++)
+        {
+            if (a[i - 1] == b[j - 1])
+                currRow[j] = prevRow[j - 1];
+            else
+            {
+                currRow[j] = 1 + std::min(
+                                     // Insert
+                                     currRow[j - 1] * 1,
+                                     std::min(
+                                         // Remove
+                                         prevRow[j] * 1,
+                                         // Replace
+                                         prevRow[j - 1] * 1));
+            }
+        }
+        prevRow = currRow;
+    }
+
+    return currRow[n];
+}
+
+
+template<typename T>
+int hamming_distance(std::vector<T> a, std::vector<T> b) {
+    int distance = 0;
+    for (int i = 0; i < a.size(); i++)
+        if (a[i] != b[i]) distance++;
+    return distance;
+}
+
+template<typename T>
+int whamming_disstance(std::vector<T> a, std::vector<T> b) {
+    int desired = std::max(a.size(), b.size());
+    a = pad_vector(a, desired);
+    b = pad_vector(b, desired);
+    return hamming_distance(a, b);
+}
 
 
 int main() {
-    // Test case 1: Same Day, Different Time
-    time_t current1 = 1725364200; // 2024-08-03 14:30:00
-    time_t past1 = 1725350100;    // 2024-08-03 10:15:00
-    std::cout << "Test 1: " << time_to_string_verbose(current1, past1) << std::endl;
+    // Creating a vector of 25 text examples
+    std::vector<std::string> examples = {
+        "магазин", "магазини", "я і є магазин", "сходив у магазин учора", "купив хліб", "сьогодні гарний день",
+        "я люблю програмування", "це мій новий код", "вечеря була смачною", "у мене є кіт", "погода сьогодні сонячна",
+        "я вивчаю C++", "він був у магазині", "ми пішли на прогулянку", "робота закінчена", "читаю цікаву книгу",
+        "поїхав у відпустку", "закінчив проект", "побачив старого друга", "зустріч була успішною", "буду працювати пізніше",
+        "сніданок був смачним", "пишу код", "це було чудове кіно", "планую поїздку"
+    };
 
-    // Test case 2: Yesterday
-    time_t current2 = 1725364200; // 2024-08-03 14:30:00
-    time_t past2 = 1725278700;    // 2024-08-02 18:45:00
-    std::cout << "Test 2: " << time_to_string_verbose(current2, past2) << std::endl;
+    // Document to search for best match
+    std::string query = "я сходив у магазин учора";
 
-    // Test case 3: Same Week, Different Day
-    time_t current3 = 1725364200; // 2024-08-03 14:30:00
-    time_t past3 = 1725039600;    // 2024-07-31 09:00:00
-    std::cout << "Test 3: " << time_to_string_verbose(current3, past3) << std::endl;
+    query = normalize_string(query);
+    std::vector<int> query_vec = vectorize(query, examples, -1);
 
-    // Test case 4: Same Month, Different Week 
-    time_t current4 = time(0); // 2024-08-30 14:30:00
-    time_t past4 = 1722476168;    // 2024-08-10 12:00:00
-    std::cout << "Test 4: " << time_to_string_verbose(current4, past4) << std::endl;
+    std::vector<std::string> corpus;
+    std::cout << query_vec[0];
+    
+    std::vector<std::pair<int, std::string>> matches;
 
-    time_t current5 = time(0)+1000000; // 2024-08-03 14:30:00
-    time_t past5 = 1722276168-100000+1000000;    // 2024-05-22 08:20:00
-    std::cout << "Test 5: " << time_to_string_verbose(current5, past5) << std::endl;
+    for (int i = 0; i < examples.size(); ++i) {
+        std::string normalized_example = normalize_string(examples[i]);
+        std::vector<int> example_vec = vectorize(normalized_example, corpus, -1);
 
-    // Test case 6: Different Year
-    time_t current6 = 1725364200; // 2024-08-03 14:30:00
-    time_t past6 = 1708820400;    // 2023-12-25 17:00:00
-    std::cout << "Test 6: " << time_to_string_verbose(current6, past6) << std::endl;
+        int desired = std::max(query_vec.size(), example_vec.size());
+        query_vec = pad_vector(query_vec, desired);
+        example_vec = pad_vector(example_vec, desired);
+        int distance = levenshtain_distance(query_vec, example_vec);
 
-    // Test case 7: New Year's Eve to New Year's Day
-    time_t current7 = 1704080400; // 2024-01-01 01:00:00
-    time_t past7 = 1704074340;    // 2023-12-31 23:59:00
-    std::cout << "Test 7: " << time_to_string_verbose(current7, past7) << std::endl;
+        std::cout << "example: " << examples[i] << std::endl;
+        for (auto v: example_vec) std::cout << v << " ";
+        std::cout << std::endl;
 
-    // Test case 8: More Than a Year Ago
-    time_t current8 = 1725364200; // 2024-08-03 14:30:00
-    time_t past8 = 1655273100;    // 2022-06-15 07:45:00
-    std::cout << "Test 8: " << time_to_string_verbose(current8, past8) << std::endl;
+        matches.push_back(std::make_pair(distance, examples[i]));
+    }
+    
 
+    std::sort(matches.begin(), matches.end());
+
+    std::cout << "Query: " << query << std::endl;
+    std::cout << "Top 5 matches:" << std::endl;
+
+    for (int i = 0; i < 5 && i < matches.size(); ++i) {
+        std::cout << "Match: " << matches[i].second << " with Levenshtein distance: " << matches[i].first << std::endl;
+    }
+
+    
     return 0;
 }
+
