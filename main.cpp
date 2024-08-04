@@ -421,11 +421,9 @@ int is_file_exist(std::string filename) {
 
 std::vector<memo*> memories_read_all_w(std::string filename) {
     std::vector<memo*> memories;
-    if (!is_file_exist(filename)) return memories;
     
-    std::ifstream file(filename.c_str());
-    file.open(filename, std::ios::in);
-
+    std::ifstream file(filename.c_str(), std::ios::in);
+    
     if(!file.is_open()) return memories;
     memories = memories_read_all(file);
     file.close();
@@ -434,9 +432,7 @@ std::vector<memo*> memories_read_all_w(std::string filename) {
 
 bool memories_write_all_w(std::string filename, const std::vector<memo*> &memories) {
     if (!is_file_exist(filename)) return false;
-
-    std::ofstream file(filename.c_str());
-    file.open(filename, std::ios::out);
+    std::ofstream file(filename.c_str(), std::ios::out | std::ios::trunc);
 
     if(!file.is_open()) return false;
     memories_write_all(file, memories);
@@ -629,7 +625,6 @@ int main() {
             message(error_user_side, "You provided no arguments.");
             continue;
         }
-
         if (!command.compare("/add") || !command.compare("/a")) {
             int id = memories_get_new_id(memories);
             memo* mem = create_memo(arguments, id);
@@ -640,10 +635,8 @@ int main() {
                 message(display, "Created memory: " + to_view_string(memo_to_stringc(mem)));
             }
         } else if (!command.compare("/repetition") || !command.compare("/i")) {
-
-        } else if (!command.compare("/search") || !command.compare("/s")) {
-
-        } else if (!command.compare("/remove") || !command.compare("/r")) {
+        } else if (!command.compare("/search") || !command.compare("/s"))     {
+        } else if (!command.compare("/remove") || !command.compare("/r"))     {
             std::stringstream iss(arguments);
             std::string id_str;
             int id = 0; iss >> id_str;
@@ -702,29 +695,6 @@ int main() {
 
         memories_write_all_w(filename_memories, memories);
     };
-
-
-    /*
-        commands: 
-        /i | /repetition <tag optional>
-            - Shows long time-ago seen memories across all memories or with specific tag only
-
-        /s | /search <text  with tags> <date <yyyy:mm:dd> optional> 
-            - Searches trough memories by query. tags filter out results;  
-
-        /a | /add <text> with tags
-            - Adds memory
-        
-        /r | /remove <id>
-            - Removes memory by id
-
-        /u | /update <id> <text with tags>
-            - updated memory by id
-    */
-    
-
-
-
 
     return 0;
 }
