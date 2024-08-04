@@ -44,6 +44,18 @@ const std::string ANSI_BRIGHT_MAGENTA = "\033[95m";
 const std::string ANSI_BRIGHT_CYAN = "\033[96m";
 const std::string ANSI_BRIGHT_WHITE = "\033[97m";
 
+
+void clear_screen()
+{
+#ifdef WINDOWS
+    std::system("cls");
+#else
+    // Assume POSIX
+    std::system("clear");
+#endif
+}
+
+
 #ifdef _WIN32
 void cout_c(int color) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -264,7 +276,7 @@ std::string time_to_string_verbose(const time_t& current, const time_t& past) {
     return make_fixed_width_string(center(iss.str(), 25), 25);
 }
 
-std::string memo_to_string(memo *mem) {
+std::string memo_to_string(const memo *mem) {
     std::stringstream iss;
     iss << std::setw(4) << std::setfill('0') << std::to_string(mem->memo_id)
     << " [" << time_to_string_verbose(time(0), mem->last_edited) + "] "
@@ -273,38 +285,26 @@ std::string memo_to_string(memo *mem) {
     return iss.str();
 }
 
-std::string memo_to_stringc(memo* mem) {
+std::string memo_to_stringc(const memo* mem) {
     std::stringstream iss;
     iss << ANSI_BLUE;
     iss << std::setw(4) << std::setfill('0');
     iss << std::to_string(mem->memo_id);
     iss<< ANSI_RESET<<"";
     iss << ANSI_YELLOW << time_to_string_verbose(time(0), mem->last_edited) << ANSI_RESET << " "
-    << mem->text + " ";
+    << remove_tags_from_string(mem->text) + " ";
     iss << ANSI_BRIGHT_MAGENTA;
     for (const auto &tag: mem->tags) iss << tag + " ";
+    iss << ANSI_RESET;
     return iss.str();
 }
-std::string memo_to_stringc(memo* mem, float confidence) {
-    std::string buffer;
+
+
+inline std::ostream& operator<<(std::ostream& iss, const memo *mem) {
+    iss << memo_to_stringc(mem);
+    return iss;
 }
 
-
-/*
-struct Address
-{
-   string street;
-   string cross;
-   int suite;
-};
-
-inline ostream& operator<<(ostream& oss, const Address& other)
-{
-   oss << "street: " << other.street << "cross: " << other.cross << "suite: " << other.suite;
-   return oss;
-}
-
-*/
 
 template<typename T>
 std::string join(const std::vector<T> &vec, const std::string &delimiter) {
@@ -319,6 +319,8 @@ memo* create_memo(const std::string &text, int id, std::vector<int> linked = {})
     memory->last_edited = time(0);
 
     memory->tags = parse_tags_from_string(text);
+    std::cout << memory->tags.size();
+
     memory->text = remove_tags_from_string(text);
 
     memory->viewed_times = 0;
@@ -411,6 +413,38 @@ std::vector<memo*> memories_read_all(T &in) {
 
     return memories;
 }
+int is_file_exist(std::string filename) {
+    std::ifstream file(filename.c_str());
+    if (file.good()) return true;
+    else return false;
+}
+
+std::vector<memo*> memories_read_all_w(std::string filename) {
+    std::vector<memo*> memories;
+    if (!is_file_exist(filename)) return memories;
+    
+    std::ifstream file(filename.c_str());
+    file.open(filename, std::ios::in);
+
+    if(!file.is_open()) return memories;
+    memories = memories_read_all(file);
+    file.close();
+    return memories;
+}
+
+bool memories_write_all_w(std::string filename, const std::vector<memo*> &memories) {
+    if (!is_file_exist(filename)) return false;
+
+    std::ofstream file(filename.c_str());
+    file.open(filename, std::ios::out);
+
+    if(!file.is_open()) return false;
+    memories_write_all(file, memories);
+
+    file.close();
+    return true;
+}
+
 
 memo* memories_get_by_id(std::vector<memo*> &memories, int id) {
     std::vector<memo*>::iterator it = std::find_if(memories.begin(), memories.end(), 
@@ -424,7 +458,6 @@ bool memories_add(memo*mem, std::vector<memo*> &memories) {
         memories.push_back(mem);
         return true; }
     return false;
-
 }
 
 bool memories_remove_by_id(std::vector<memo*> &memories, int id) {
@@ -460,9 +493,243 @@ std::vector<int> memories_get_all_ids(const std::vector<memo*> &memories) {
 }
 
 int memories_get_new_id(const std::vector<memo*> &memories) {
-    std::vector<int> ids = memories_get_all_ids(memories);
-    return *std::max_element(ids.begin(), ids.end()); 
+    if (memories.size() > 0 ) {
+        std::vector<int> ids = memories_get_all_ids(memories);
+        return *std::max_element(ids.begin(), ids.end())+1; 
+    } else {
+        return 1;
+    }
 }
+
+bool file_create(std::string filename) {
+    std::ofstream outfile(filename);
+    if (outfile.is_open()){
+        outfile << " " << std::endl;
+        outfile.close();
+        return true;
+    } 
+    return false;
+}
+
+struct search_result {
+    memo reference;
+    float confidence;
+};
+
+
+std::string parse_command(std::string str) {
+    std::regex command_regex("[/]{1}[A-z]+");
+    auto rbegin = std::sregex_iterator(str.begin(), str.end(), command_regex);
+    auto rend = std::sregex_iterator();
+    if (rbegin != rend) {
+        std::smatch match = *rbegin;
+        return match.str();
+    }
+    
+    return "";
+}
+
+std::string remove_commands(std::string str) {
+    std::regex command_regex("[/]{1}[A-z]+");
+    return std::regex_replace(str, command_regex, "");
+}
+
+std::string remove_redundant_spaces(std::string str) {
+    std::regex spaces_regex("[ ]+");
+    return std::regex_replace(str, spaces_regex, " ");
+}
+
+std::string trim(std::string str) {
+    std::regex start_regex("^[ ]+");
+    std::regex end_regex("[ ]+$");
+    str = std::regex_replace(str, start_regex, "");
+    str = std::regex_replace(str, end_regex, "");
+    return str;
+}
+
+std::string to_view_string(std::string str) {
+    return trim(remove_redundant_spaces(remove_tags_from_string(str)));
+}
+
+enum codes {
+    error_user_side = 'u',
+    error_program_side = 'p',
+    ok = 'o',
+    display = 'd'
+};
+
+void message(const enum codes code, const std::string &message) {
+    std::stringstream iss;
+    switch (code) {
+        case error_program_side:
+            iss << ANSI_RESET << "[ " << ANSI_RED << "fail" << ANSI_RESET << " ]";
+            break;
+        case error_user_side:
+            iss << ANSI_RESET << "[" << ANSI_YELLOW << "error " << ANSI_RESET << "]";
+            break;
+        case ok:
+            iss << ANSI_RESET <<   "[  " << ANSI_GREEN << "ok"  << ANSI_RESET << "  ]";
+            break;
+        case display:
+            iss << ANSI_RESET <<   "[  " << ANSI_WHITE << "--"  << ANSI_RESET << "  ]";
+            break;
+        default:
+            break;
+    }
+    iss << " " << message << std::endl;
+    std::cout << iss.str();
+}
+
+void copy(memo*dst, memo*src) {
+    dst->created = src->created;
+    dst->last_edited = src->last_edited;
+
+    for (const auto m: src->linked_memories)
+        dst->linked_memories.push_back(m);
+
+    for (auto t: src->tags)
+        dst->tags.push_back(t);
+
+    dst->memo_id = src->memo_id;
+    dst->text = src->text;
+    dst->viewed_times = src->viewed_times;
+}
+
+void program_setup();
+void command_help();
+void command_add();
+void command_remove();
+void command_update();
+void command_clear();
+void command_ascii_art();
+
+
+int main() {
+
+    std::string filename_memories = "memories.txt";
+    if (!is_file_exist(filename_memories)) {
+        file_create(filename_memories);
+        message(ok, "Memories files not found. Created new one: " + filename_memories);
+    }
+
+    std::string user_input, command, arguments;
+    std::vector<memo*> memories = memories_read_all_w(filename_memories);
+
+    while (true) {
+        
+        std::cout << "|" << memories.size() << "> ";
+        getline(std::cin, user_input);
+
+        command = parse_command(user_input);
+        arguments = remove_commands(user_input);
+        if (command.length() == 0) {
+            message(error_user_side, "Entered command is too short.");
+            continue;
+        } else if (trim(arguments).length() == 0) {
+            message(error_user_side, "You provided no arguments.");
+            continue;
+        }
+
+        if (!command.compare("/add") || !command.compare("/a")) {
+            int id = memories_get_new_id(memories);
+            memo* mem = create_memo(arguments, id);
+            if (!memories_add(mem, memories)) {
+                message(error_program_side, "Something went wrong.");
+            } else {
+                message(ok, "Memory successfuly created");
+                message(display, "Created memory: " + to_view_string(memo_to_stringc(mem)));
+            }
+        } else if (!command.compare("/repetition") || !command.compare("/i")) {
+
+        } else if (!command.compare("/search") || !command.compare("/s")) {
+
+        } else if (!command.compare("/remove") || !command.compare("/r")) {
+            std::stringstream iss(arguments);
+            std::string id_str;
+            int id = 0; iss >> id_str;
+            id = std::stoi(id_str);
+
+            memo* mem = memories_get_by_id(memories, id); 
+            if (mem == nullptr) {
+                message(error_user_side, "There is no memory with such id");
+                continue;
+            }
+
+            if (!memories_remove_by_id(memories, id)) {
+                message(error_program_side, "Something went wrong");
+                continue;
+            }
+
+            std::string buffer = "Memory " + to_view_string(memo_to_stringc(mem)) + " has been removed";
+            message(ok, buffer);
+
+        } else if (!command.compare("/update") || !command.compare("/u")) {
+            std::stringstream iss(arguments);
+            std::string id_str, text;
+            int id = 0; iss >> id_str;
+            id = std::stoi(id_str);
+            getline(iss, text);
+
+            memo* mem = memories_get_by_id(memories, id); 
+            
+            mem->text = mem->text;
+            if (mem == nullptr) {
+                message(error_user_side, "There is no memory with such id");
+                continue;
+            }
+
+            memo* old_mem = new memo(); 
+            copy(old_mem, mem);
+
+            if (!memories_update_by_id(memories, id, text)) {
+                message(error_program_side, "Something went wrong");
+                continue;
+            }
+            memo* mem_new = memories_get_by_id(memories, id); 
+            std::string message_str = "Memory    : "+ to_view_string(memo_to_stringc(old_mem)) + " successfuly";
+            message(ok, message_str);
+            message(display,          "updated to: " + to_view_string(memo_to_stringc(mem_new)));
+            delete mem;
+        } else if (!command.compare("/all")) {
+            message(ok, "Displaying all memories.");
+            for (const auto &mem: memories) {
+                std::cout << to_view_string(memo_to_stringc(mem)) << std::endl;
+            }
+
+        } else {
+            message(error_user_side, "There is no such command.");
+        }
+
+        memories_write_all_w(filename_memories, memories);
+    };
+
+
+    /*
+        commands: 
+        /i | /repetition <tag optional>
+            - Shows long time-ago seen memories across all memories or with specific tag only
+
+        /s | /search <text  with tags> <date <yyyy:mm:dd> optional> 
+            - Searches trough memories by query. tags filter out results;  
+
+        /a | /add <text> with tags
+            - Adds memory
+        
+        /r | /remove <id>
+            - Removes memory by id
+
+        /u | /update <id> <text with tags>
+            - updated memory by id
+    */
+    
+
+
+
+
+    return 0;
+}
+
+
 
 
 /*
@@ -491,81 +758,8 @@ void glove();
 void search(); // multiprocessing if multiple search models used;
 void metric(); // function pointers?
 
-void memo_to_string();
-void memo_to_string_colored();
-void memo_to_string_colored(); // confidence
-
-
-void create_file();
 
 void get_command_prompt();
 
-void parse_command();
-void program_setup();
-void command_help();
-void command_add();
-void command_remove();
-void command_update();
-void command_clear();
-void command_ascii_art();
 */
 // Features: search as type goes
-
-
-struct search_result {
-    memo reference;
-    float confidence;
-};
-
-
-int main() {
-    std::vector<int > linked = {1, 3, 1, 2, 4};
-    memo* mem0 = create_memo("text0 #tag b #vss", 1, linked);
-    memo* mem1 = create_memo("text1 #tag b #vss", 2, linked);
-    memo* mem2 = create_memo("text2 #tag b #vss", 3, linked);
-    std::vector<memo*> memories;
-    std::stringstream test;
-
-    memories_add(mem0, memories);
-    memories_add(mem1, memories);
-    memories_add(mem2, memories);
-    //memories_remove_by_id(memories, 1);
-    //memories_remove_by_id(memories, 2);
-    //memories_remove_by_id(memories, 3);
-    //memories_add(mem2, memories);
-    memories_update_by_id(memories, 3, "New text and no tags!");
-
-    for (const auto &mem: memories) std::cout << memo_to_stringc(mem) <<std::endl;
-
-
-    /*
-    memories_write_all(test, memories);
-    std::vector<memo*> rmemories;
-
-    rmemories = memories_read_all(test);    
-    for (const auto &mem: rmemories)
-        debug_print_memo(mem);
-    */
-
-    /*
-    std::ofstream file_write("test.txt", std::ios::out);
-    if (file_write.is_open()) {
-        memories_write_all(file_write, memories);
-        file_write.close();
-    }
-
-    std::vector<memo*> rmemories;
-    std::fstream file_read("test.txt", std::ios::in);
-    if (file_read.is_open()) {
-        rmemories = memories_read_all(file_read);    
-        file_read.close();
-    }
-    
-     for (const auto &mem: rmemories)
-         debug_print_memo(mem);
-
-    */
-
-    return 0;
-}
-

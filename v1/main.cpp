@@ -263,8 +263,7 @@ int command_search(program_state &state)
     return code_ok;
 }
 
-int command_exit(program_state &state)
-{
+int command_exit(program_state &state) {
     return code_exit;
 }
 
