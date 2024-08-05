@@ -839,7 +839,7 @@ std::vector<search_result> search(
     normalized_query = normalize_string(normalized_query);
     std::vector<int> query_vec = vectorize(normalized_query, terms, n);
 
-    auto query_tags_vectorized = vectorize(join(filter_tags, " "), terms);
+    auto query_tags_vectorized = vectorize(join(filter_tags, " "), tags_vocab);
     for (const auto &mem: memories) {
         auto doc_tags_vectorized = vectorize(join(mem->tags, " "), tags_vocab);
         std::set<std::string> tags_doc_set = vec2set(mem->tags);
