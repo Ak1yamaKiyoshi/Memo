@@ -844,9 +844,11 @@ std::vector<search_result> search(
         auto doc_tags_vectorized = vectorize(join(mem->tags, " "), tags_vocab);
         std::set<std::string> tags_doc_set = vec2set(mem->tags);
 
-        float tags_score = wjaccardSimilarity(query_tags_vectorized, doc_tags_vectorized);
-        if (!tags_score) continue; 
-        
+        if (filter_tags.size() > 0) {
+            float tags_score = wjaccardSimilarity(query_tags_vectorized, doc_tags_vectorized);
+            if (!tags_score) continue; 
+        }
+
         std::string buffer = mem->text;
         std::vector<int> document_vec = vectorize(buffer, terms, n);
         search_result sr;
@@ -927,7 +929,9 @@ int main() {
             message(ok, "Search completed in " + std::to_string(time_taken) + "s. ");
             message(display, "Results: ");
 
+            int i = 0;
             for (auto result: rs) {
+                if (i++ > 5) break;
                 std::cout << "[" << ANSI_BRIGHT_WHITE<< std::fixed << std::setprecision(2) 
                 << std::setw(5) << std::setfill(' ')  << result.confidence << " ] "  << ANSI_RESET << result.reference << std::endl; 
             }
