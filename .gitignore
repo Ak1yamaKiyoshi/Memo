@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+vocab.txt
+memory.bin
+sketches.md
+res.md
+build/
+
+memories
