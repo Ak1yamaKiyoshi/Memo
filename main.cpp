@@ -353,7 +353,6 @@ memo* create_memo(const std::string &text, int id, std::vector<int> linked = {})
     memory->last_edited = time(0);
 
     memory->tags = parse_tags_from_string(text);
-    std::cout << memory->tags.size();
 
     memory->text = remove_tags_from_string(text);
 
@@ -598,13 +597,13 @@ void message(const enum codes code, const std::string &message) {
     std::stringstream iss;
     switch (code) {
         case error_program_side:
-            iss << ANSI_RESET << "[ " << ANSI_RED << "fail" << ANSI_RESET << " ]";
+            iss << ANSI_RESET << "[ " << ANSI_BRIGHT_RED << "fail" << ANSI_RESET << " ]";
             break;
         case error_user_side:
-            iss << ANSI_RESET << "[" << ANSI_YELLOW << "error " << ANSI_RESET << "]";
+            iss << ANSI_RESET << "[" << ANSI_BRIGHT_YELLOW << "error " << ANSI_RESET << "]";
             break;
         case ok:
-            iss << ANSI_RESET <<   "[  " << ANSI_GREEN << "ok"  << ANSI_RESET << "  ]";
+            iss << ANSI_RESET <<   "[  " << ANSI_BRIGHT_GREEN << "ok"  << ANSI_RESET << "  ]";
             break;
         case display:
             iss << ANSI_RESET <<   "[  " << ANSI_WHITE << "--"  << ANSI_RESET << "  ]";
@@ -860,7 +859,6 @@ std::vector<search_result> search(
 }  
 
 
-
 int main() {
     std::string filename_memories = "memories.txt";
     if (!is_file_exist(filename_memories)) {
@@ -879,11 +877,11 @@ int main() {
         time_t b = a;
         a = time(0);
         double diff = difftime(a, b);
-        if (diff < 0.002) {
+        if (diff < 0.00001) {
             message(error_program_side, "Too fast iteration. Suspect of endless loop. Exiting."); 
             return -1;
         } 
-        
+
         memories_write_all_w(filename_memories, memories);
         memories = memories_read_all_w(filename_memories);
         
@@ -912,6 +910,8 @@ int main() {
             }
         
         } else if (!command.compare("/repetition") || !command.compare("/i")) {
+            message(error_program_side, "Not implemented yet!"); 
+            continue;
         } else if (!command.compare("/search") || !command.compare("/s"))     {
             if (trim(arguments).length() == 0) {
                 message(error_user_side, "You provided search query.");
@@ -934,6 +934,37 @@ int main() {
 
         } else if (!command.compare("/clear") || !command.compare("/c"))     {
             clear_screen();
+        } else if (!command.compare("/help") || !command.compare("/h"))     {
+            std::stringstream help_message;
+            help_message 
+                << "Available commands:\n"
+                << ANSI_BRIGHT_WHITE << "/add " << ANSI_BRIGHT_BLUE << "<text> " << ANSI_RESET << "\t\t"
+                << "(or " << ANSI_BRIGHT_WHITE << "/a" << ANSI_RESET << ") - Add a new memory. " 
+                << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << " can have tags (e.g., " 
+                << ANSI_BRIGHT_MAGENTA << "#tag" << ANSI_RESET << ") used for filtering in search.\n"
+                << ANSI_BRIGHT_WHITE << "/repetition" << ANSI_RESET << "\t\t"
+                << "(or " << ANSI_BRIGHT_WHITE << "/i" << ANSI_RESET << ") - Check memory repetition (Not implemented yet).\n"
+                << ANSI_BRIGHT_WHITE << "/search " << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << "\t\t"
+                << "(or " << ANSI_BRIGHT_WHITE << "/s" << ANSI_RESET << ") - Search memories using " 
+                << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << ". You can filter by tags like " 
+                << ANSI_BRIGHT_MAGENTA << "#tag" << ANSI_RESET << ".\n"
+                << ANSI_BRIGHT_WHITE << "/clear" << ANSI_RESET << "\t\t"
+                << "(or " << ANSI_BRIGHT_WHITE << "/c" << ANSI_RESET << ") - Clear the screen.\n"
+                << ANSI_BRIGHT_WHITE << "/help  " << ANSI_RESET << "\t\t"
+                << "(or " << ANSI_BRIGHT_WHITE << "/h" << ANSI_RESET << ") - Display this help message.\n"
+                << ANSI_BRIGHT_WHITE << "/exit  " << ANSI_RESET << "\t\t"
+                << "(or " << ANSI_BRIGHT_WHITE << "/e" << ANSI_RESET << ") - Exit the program.\n"
+                << ANSI_BRIGHT_WHITE << "/remove " << ANSI_YELLOW << "<id>" << ANSI_RESET << "\t\t"
+                << "(or " << ANSI_BRIGHT_WHITE << "/r" << ANSI_RESET << ") - Remove a memory with the specified " 
+                << ANSI_YELLOW << "<id>" << ANSI_RESET << ".\n"
+                << ANSI_BRIGHT_WHITE << "/update " << ANSI_YELLOW << "<id> " << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << "\t"
+                << "(or " << ANSI_BRIGHT_WHITE << "/u" << ANSI_RESET << ") - Update a memory with the specified " 
+                << ANSI_YELLOW << "<id>" << ANSI_RESET << " to the new " 
+                << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << ".\n"
+                << ANSI_BRIGHT_WHITE << "/all   " << ANSI_RESET << "\t\t- Display all memories.\n";
+
+            message(display, help_message.str());
+
         } else if (!command.compare("/exit") || !command.compare("/e"))     {
             break;
         } else if (!command.compare("/remove") || !command.compare("/r"))     {
