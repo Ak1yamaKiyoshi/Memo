@@ -6,11 +6,12 @@
 #include <set>
 #include <bits/stdc++.h>
 #include <vector>
+
+#include <algorithm>
 #include <math.h>
+#include <set>
 
 const std::string SPECIAL_CHARACTERS = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
-
-
 
 template<typename T>
 std::vector<T> pad_vector(std::vector<T> &vec, const int desired_length, const int filler=-10) {
@@ -88,15 +89,6 @@ std::string remove_special_characters(std::string &text) {
         text.end());
     return text;
 }
-
-/*
-std::vector<int> foo = {25,15,5,-5,-15};
-std::vector<int> bar;
-
-// copy only positive numbers:
-std::copy_if (foo.begin(), foo.end(), std::back_inserter(bar), [](int i){return i>=0;} );
-
-*/
 
 std::string tolower_curlocale(std::string &str) {
     std::locale loc("");
@@ -248,9 +240,10 @@ std::vector<int> filter(std::vector<int> a) {
     return b;
 }
 
+template <typename T>
 float levenshtain_distance(
-    std::vector<int> a,
-    std::vector<int> b)
+    std::vector<T> a,
+    std::vector<T> b)
 {
     int m = a.size();
     int n = b.size();
@@ -303,55 +296,122 @@ int whamming_disstance(std::vector<T> a, std::vector<T> b) {
     return hamming_distance(a, b);
 }
 
+double jaccardSimilarity(const std::set<int>& setA, const std::set<int>& setB) {
+
+    std::set<int> intersection;
+    std::set_intersection(setA.begin(), setA.end(), setB.begin(), setB.end(),
+                          std::inserter(intersection, intersection.begin()));
+
+    std::set<int> unionSet;
+    std::set_union(setA.begin(), setA.end(), setB.begin(), setB.end(),
+                   std::inserter(unionSet, unionSet.begin()));
+    
+    double similarity = static_cast<double>(intersection.size()) / unionSet.size();
+    return similarity;
+}
+
+
+
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <cmath>
+
+
+// Include all necessary functions from the original code here
+// (normalize_string, vectorize, levenshtain_distance, etc.)
 
 int main() {
-    // Creating a vector of 25 text examples
     std::vector<std::string> examples = {
-        "магазин", "магазини", "я і є магазин", "сходив у магазин учора", "купив хліб", "сьогодні гарний день",
-        "я люблю програмування", "це мій новий код", "вечеря була смачною", "у мене є кіт", "погода сьогодні сонячна",
-        "я вивчаю C++", "він був у магазині", "ми пішли на прогулянку", "робота закінчена", "читаю цікаву книгу",
-        "поїхав у відпустку", "закінчив проект", "побачив старого друга", "зустріч була успішною", "буду працювати пізніше",
-        "сніданок був смачним", "пишу код", "це було чудове кіно", "планую поїздку"
+        "магазин", "магазини", "я і є магазин", "сходив у магазин учора", "купив хліб", 
+        "сьогодні гарний день", "я люблю програмування", "це мій новий код", 
+        "вечеря була смачною", "у мене є кіт", "погода сьогодні сонячна",
+        "я вивчаю C++", "він був у магазині", "ми пішли на прогулянку", 
+        "робота закінчена", "читаю цікаву книгу", "поїхав у відпустку", 
+        "закінчив проект", "побачив старого друга", "зустріч була успішною", 
+        "буду працювати пізніше", "сніданок був смачним", "пишу код", 
+        "це було чудове кіно", "планую поїздку"
     };
 
-    // Document to search for best match
-    std::string query = "я сходив у магазин учора";
+    
+    const int ENSHITIFICATION = 3;
+
+    std::vector<std::string> terms;
+
+
+
+    
+    std::string query;
+    std::cout << "Enter your query: ";
+    std::getline(std::cin, query);
 
     query = normalize_string(query);
-    std::vector<int> query_vec = vectorize(query, examples, -1);
+    std::vector<int> query_vec = vectorize(query, terms, ENSHITIFICATION);
 
-    std::vector<std::string> corpus;
-    std::cout << query_vec[0];
+    std::vector<std::pair<float, std::string>> matches;
+    std::vector<std::pair<float, std::string>> matches_alt;
+
+    for ( auto& example : examples) {
+        std::string normalized_example = normalize_string(example);
+        std::vector<int> example_vec = vectorize(normalized_example, terms, ENSHITIFICATION);
     
-    std::vector<std::pair<int, std::string>> matches;
 
-    for (int i = 0; i < examples.size(); ++i) {
-        std::string normalized_example = normalize_string(examples[i]);
-        std::vector<int> example_vec = vectorize(normalized_example, corpus, -1);
 
-        int desired = std::max(query_vec.size(), example_vec.size());
-        query_vec = pad_vector(query_vec, desired);
-        example_vec = pad_vector(example_vec, desired);
-        int distance = levenshtain_distance(query_vec, example_vec);
+        // Metric 1: 
+        float keywordScore = 0;
+        for (int i = 0; i < query_vec.size(); i++) {
+            if (std::find(example_vec.begin(), example_vec.end(), query_vec[i]) != example_vec.end()) {
+                keywordScore += 1.0f / query_vec.size();
+            }
+        }
+        float levenshtein_dist = levenshtain_distance(query_vec, example_vec);
+        float metric1 = (keywordScore / levenshtein_dist);
+        std::cout << example << "| keyword: " << keywordScore << "levenshtain: " << levenshtein_dist << std::endl;
 
-        std::cout << "example: " << examples[i] << std::endl;
-        for (auto v: example_vec) std::cout << v << " ";
-        std::cout << std::endl;
+        // Metric 2
+        
+        std::set<int> example_set(example_vec.begin(), example_vec.end());
+        std::set<int> query_set(query_vec.begin(), query_vec.end());
+        
+        float metric2 = jaccardSimilarity(example_set, query_set);
 
-        matches.push_back(std::make_pair(distance, examples[i]));
+
+        //std::cout << example << "| keyword: " << keywordScore << "levenshtain: " << levenshtein_dist << std::endl;
+        matches.push_back(std::make_pair(metric1, example));
+        matches_alt.push_back(std::make_pair(metric2, example));
     }
-    
 
-    std::sort(matches.begin(), matches.end());
+    
+    std::sort(matches.begin(), matches.end(), std::less_equal<>());
+    std::sort(matches_alt.begin(), matches_alt.end(), std::less_equal<>());
 
     std::cout << "Query: " << query << std::endl;
-    std::cout << "Top 5 matches:" << std::endl;
-
-    for (int i = 0; i < 5 && i < matches.size(); ++i) {
-        std::cout << "Match: " << matches[i].second << " with Levenshtein distance: " << matches[i].first << std::endl;
+    std::cout << "\nTop matches (Metric 1):" << std::endl;
+    for (int i = 0; i < 1115 && i < matches.size(); ++i) {
+        std::cout << matches[i].second << " | Score: " << matches[i].first << std::endl;
     }
 
-    
+    std::cout << "\nTop matches (Metric 2):" << std::endl;
+    for (int i = 0; i < 1115 && i < matches_alt.size(); ++i) {
+        std::cout << matches_alt[i].second << " | Score: " << matches_alt[i].first << std::endl;
+    }
+
     return 0;
 }
 
+
+/*
+Current good search: 
+    1 / keywordScore / levenshtein_dist
+
+Proposed one: 
+    delete words (ngrams) that are not in query
+
+
+
+
+
+
+*/

@@ -1,11 +1,45 @@
 
+
+//                                               ░░          ░░░░                                                                          
+//         *                                   ▒▒▒▒          ░░▒▒░░                                                                        
+//                                             ▒▒▒▒          ░░▒▒▒▒                                                                        
+//                          *                  ▒▒▒▒          ░░▒▒▒▒                                                                        
+//                                             ▒▒▒▒          ▒▒▒▒▒▒                                                                        
+//          *                                  ▒▒▒▒▒▒░░▒▒    ▒▒▒▒▒▒                                                                        
+//       *                                     ░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                                                                          
+//                                               ░░▒▒▒▒▒▒▒▒▒▒▒▒                                                                            
+//                                               ▒▒▒▒▒▒▒▒▒▒▒▒▓▓                                                                            
+//                   *                           ▒▒▒▒▒▒██▓▓▒▒▒▒                                                                            
+//                                               ░░▒▒▒▒▒▒▒▒▒▒▒▒                                                                            
+//            *                       *          ░░▒▒▒▒▒▒▒▒▒▒▒▒                                                                            
+//                                               ░░▒▒▒▒▒▒▒▒▒▒▒▒                                                                            
+//                                               ░░▒▒▒▒▒▒▒▒▒▒▒▒                                                                            
+//             *                                 ▒▒▓▓▓▓▒▒▒▒▓▓▓▓░░                                                                          
+//                                               ░░▒▒▒▒▓▓▓▓▒▒▒▒▒▒▒▒░░░░░░                                                                  
+//                      *                        ░░▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░                                                          
+//                                                 ▒▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░                                                      
+//                                                 ▒▒▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░                                                    
+//                                                 ▒▒▒▒▓▓▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                                                    
+//                                                 ░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░                                                    
+//                                                   ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                                                      
+//             *                                     ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                                                      
+//                            *                      ▒▒▒▒░░▒▒▒▒▒▒░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒                                                        
+//                                                   ▒▒▒▒░░  ▒▒▒▒      ░░▒▒▒▒  ▒▒▒▒                                                        
+//                                                   ░░▒▒    ▒▒▒▒        ▒▒░░░░▒▒▒▒                                                        
+// ▓▓▓▓▓ ▓                                           ░░▒▒    ▒▒          ▒▒░░  ▒▒                                                          
+// ▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓                ▒                    ░░     ░           ░     ░░        
+// ░░░░░░░░░░▒▒▒▒▒▒▒▒▓▓▒▒▒▒▒▒▓▓▒▒▒▒▒░░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+
+
 #include <ctime>
 #include <time.h>
 
 #include <fstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include <sstream>
+#include <set>
 
 #include <regex>
 #include <codecvt>
@@ -44,6 +78,7 @@ const std::string ANSI_BRIGHT_MAGENTA = "\033[95m";
 const std::string ANSI_BRIGHT_CYAN = "\033[96m";
 const std::string ANSI_BRIGHT_WHITE = "\033[97m";
 
+const std::string SPECIAL_CHARACTERS = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 
 void clear_screen()
 {
@@ -66,7 +101,6 @@ void cout_c(const std::string& color) {
     std::cout << color;
 }
 #endif
-
 
 
 std::vector<std::string> parse_tags_from_string(const std::string &text) {
@@ -361,7 +395,6 @@ memo* memo_read(T &in, std::string delimiter = "|") {
 
     if (tokens.size() > 1) {
         memo* mem = new memo();
-
         mem->viewed_times = std::stoi(tokens[0]);
         mem->last_edited = (time_t)std::stoi(tokens[1]);
         mem->created = (time_t)std::stoi(tokens[2]);
@@ -508,7 +541,7 @@ bool file_create(std::string filename) {
 }
 
 struct search_result {
-    memo reference;
+    memo* reference;
     float confidence;
 };
 
@@ -546,6 +579,13 @@ std::string trim(std::string str) {
 std::string to_view_string(std::string str) {
     return trim(remove_redundant_spaces(str));
 }
+std::string vec2string(const std::vector<std::string> &vec, std::string delimiter=" ") {
+    std::stringstream iss;
+    for (int i = 0; (unsigned long)i < vec.size(); i++) 
+        iss << vec[i] << delimiter;
+    return iss.str();
+}
+
 
 enum codes {
     error_user_side = 'u',
@@ -592,17 +632,245 @@ void copy(memo*dst, memo*src) {
 }
 
 
+double jaccardSimilarity(const std::set<int>& setA, const std::set<int>& setB) {
+    std::set<int> intersection;
+    std::set_intersection(setA.begin(), setA.end(), setB.begin(), setB.end(),
+                          std::inserter(intersection, intersection.begin()));
+    std::set<int> unionSet;
+    std::set_union(setA.begin(), setA.end(), setB.begin(), setB.end(),
+                   std::inserter(unionSet, unionSet.begin()));
+    double similarity = static_cast<double>(intersection.size()) / unionSet.size();
+    return similarity;
+}
+
+double wjaccardSimilarity(const std::vector<int> &a, const std::vector<int> b) {
+    std::set<int> example_set(a.begin(), a.end());
+    std::set<int> query_set(b.begin(), b.end());
+    return jaccardSimilarity(example_set, query_set);
+}
+
+void discover(const std::string &ngram, std::vector<std::string> &terms)
+{
+    if ((std::find(terms.begin(), terms.end(), ngram) == terms.end()))
+        terms.push_back(ngram);
+}
+
+std::string remove_spaces(std::string str) {
+    std::regex spaces_regex("[ ]+");
+    return std::regex_replace(str, spaces_regex, "");
+}
+
+
+std::vector<std::string> to_ngrams(
+    const std::string &sentence,
+    std::vector<std::string> &terms,
+    int n)
+{
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+    std::u32string utf32_sentence = converter.from_bytes(sentence);
+
+    std::vector<std::string> ngrams;
+    std::string ngram;
+
+    int offset = 0;
+    int counter = 1;
+    while (offset < utf32_sentence.length()) {
+        ngram = converter.to_bytes(utf32_sentence.substr(offset, counter));
+        if (counter < n) counter++;
+        offset += 1;
+        ngrams.push_back(ngram);
+        discover(ngram, terms);
+    }
+    return ngrams;
+}
+
+std::string remove_special_characters(std::string &text) {
+    text.erase(std::remove_if(text.begin(), text.end(),
+        [](char c) { return (SPECIAL_CHARACTERS.find(c) != std::string::npos);}),
+        text.end());
+    return text;
+}
+
+std::string tolower_curlocale(std::string &str) {
+    std::locale loc("");
+
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+    std::wstring wide = converter.from_bytes(str);
+
+    std::transform(
+        wide.begin(), wide.end(), wide.begin(), 
+        [&loc](wchar_t c) {
+            return std::tolower(c, loc);
+    });
+    return converter.to_bytes(wide);
+}
+
+
+std::string normalize_string(std::string &str) {
+    str = tolower_curlocale(str);
+    str = remove_special_characters(str);
+    str = remove_redundant_spaces(str);
+    return str;
+}
+
+std::set<std::string> vector2set(const std::vector<std::string> &v) {
+    std::set<std::string> set;
+    for (auto e: v) set.insert(e);
+    return set;
+} 
+
+std::vector<std::string> set2vector(const std::set<std::string> &s) {
+    std::vector<std::string> vec(s.begin(), s.end());
+    return vec;
+}
+
+
+
+std::vector<search_result> sort_results(std::vector<search_result> results) {
+    for (int i = 0; i < (int)results.size()-1; i++) {
+        for (int j = 0; j < (int)results.size()-1; j++) {
+            if (results[j].confidence < results[j+1].confidence) {
+                iter_swap(results.begin() + j, results.begin() + j + 1);
+            }
+        }
+    }
+    return results;
+}
+
+int word_to_id(const std::string &word, std::vector<std::string> &terms) {
+    auto result = std::find(terms.begin(), terms.end(), word); 
+    if ((result == terms.end())) return -1;
+    else return (int)(result - terms.begin());
+}
+
+std::vector<int> sentence_to_vector(std::string&sentence, std::vector<std::string> &terms) {
+    std::vector<std::string> words = split_by_space(remove_redundant_spaces(remove_special_characters(sentence)));
+    std::vector<int> resulting_vector;
+    for (const auto &word: words) resulting_vector.push_back(word_to_id(word, terms));
+    return resulting_vector;
+}
+
+std::vector<int> vectorize(std::string sentence, std::vector<std::string> &terms, int n =-1 ) {
+    if (n != -1) {
+        std::vector<std::string> ngrams = to_ngrams(sentence, terms, n);
+        for (const std::string &term: ngrams) discover(term, terms);
+        std::string ngrams_str = vec2string(ngrams);
+        return sentence_to_vector(ngrams_str, terms);
+    } else {
+        std::string normalized = normalize_string(sentence);
+        for (auto word: split_by_space(sentence)) discover(word, terms);
+        return sentence_to_vector(normalized, terms);
+    }
+}
+
+std::vector<int> filter(std::vector<int> a) {
+    std::vector<int> b;
+    std::copy_if (a.begin(), a.end(), std::back_inserter(b), [](int i){return i>=0;} );
+    return b;
+}
+
+template <typename T>
+float levenshtain_distance(
+    std::vector<T> a,
+    std::vector<T> b)
+{
+    int m = a.size();
+    int n = b.size();
+
+    std::vector<int> prevRow(n + 1, 0);
+    std::vector<int> currRow(n + 1, 0);
+    for (int j = 0; j <= n; j++)
+        prevRow[j] = j;
+    for (int i = 1; i <= m; i++) {
+        currRow[0] = i;
+        for (int j = 1; j <= n; j++) 
+            if (a[i - 1] == b[j - 1])
+                currRow[j] = prevRow[j - 1];
+            else
+                currRow[j] = 1 + std::min(currRow[j - 1] * 1, std::min(prevRow[j] * 1, prevRow[j - 1] * 1));
+        prevRow = currRow;
+    }
+    return currRow[n];
+}
+
+
+std::vector<std::string> vocablurary_read(const std::string &filename) {
+    std::ifstream file_r(filename);
+    std::vector<std::string> new_vocab;
+    std::string buffer;
+    while (file_r >> buffer) {
+        new_vocab.push_back(buffer);
+    }
+    return new_vocab;
+}
+
+void vocablurary_write(const std::vector<std::string> vocab, const std::string &filename, const std::string delimiter = " ") {
+    std::ofstream file(filename);
+    if (file.is_open())
+        for (const auto &word: vocab) {
+            file << word << delimiter;
+    }
+    file.close();
+} 
+
+
+
+template <typename T>
+std::set<T> vec2set(const std::vector<T> &v) {
+    std::set<T> set;
+    for (auto e: v) set.insert(e);
+    return set;
+} 
+
+
+
+std::vector<search_result> search(
+    const std::string &query, const std::vector<memo*> &memories, 
+    std::vector<std::string> &terms, int n= 3
+) {
+
+    // TODO: parse dates from string and search most recent too;
+    // if date is present, normalize time diff between query and best match 
+    // add it to confidence; 
+    std::vector<std::string> tags_vocab;
+
+    std::vector<search_result> results;
+    std::vector<std::string> filter_tags = parse_tags_from_string(query);
+    std::string normalized_query = remove_tags_from_string(query);
+    normalized_query = normalize_string(normalized_query);
+    std::vector<int> query_vec = vectorize(normalized_query, terms, n);
+
+    auto query_tags_vectorized = vectorize(join(filter_tags, " "), terms);
+    for (const auto &mem: memories) {
+        auto doc_tags_vectorized = vectorize(join(mem->tags, " "), tags_vocab);
+        std::set<std::string> tags_doc_set = vec2set(mem->tags);
+
+        float tags_score = wjaccardSimilarity(query_tags_vectorized, doc_tags_vectorized);
+        if (!tags_score) continue; 
+        
+        std::string buffer = mem->text;
+        std::vector<int> document_vec = vectorize(buffer, terms, n);
+        search_result sr;
+        sr.confidence = (float)wjaccardSimilarity(query_vec, document_vec);
+        sr.reference = mem;
+        results.push_back(sr);
+    }
+    results = sort_results(results);
+    return results;
+}  
+
+
 
 int main() {
-
     std::string filename_memories = "memories.txt";
     if (!is_file_exist(filename_memories)) {
         file_create(filename_memories);
         message(ok, "Memories files not found. Created new one: " + filename_memories);
     }
 
+    const int N_FOR_NGRAMS= 3;
+    std::vector<std::string> vocablurary;
     std::string user_input, command, arguments;
-    
     std::vector<memo*> memories = memories_read_all_w(filename_memories);
     
     time_t a = time(0)-10000;
@@ -611,7 +879,7 @@ int main() {
         time_t b = a;
         a = time(0);
         double diff = difftime(a, b);
-        if (diff < 0.020) {
+        if (diff < 0.002) {
             message(error_program_side, "Too fast iteration. Suspect of endless loop. Exiting."); 
             return -1;
         } 
@@ -645,6 +913,27 @@ int main() {
         
         } else if (!command.compare("/repetition") || !command.compare("/i")) {
         } else if (!command.compare("/search") || !command.compare("/s"))     {
+            if (trim(arguments).length() == 0) {
+                message(error_user_side, "You provided search query.");
+                continue;
+            }
+            
+            time_t search_start = time(0);
+            std::vector<search_result> rs = search(arguments, memories, vocablurary);
+            time_t search_end = time(0);
+            time_t diff = search_end - search_start;
+            float time_taken = static_cast<float>(diff);
+
+            message(ok, "Search completed in " + std::to_string(time_taken) + "s. ");
+            message(display, "Results: ");
+
+            for (auto result: rs) {
+                std::cout << "[" << ANSI_BRIGHT_WHITE<< std::fixed << std::setprecision(2) 
+                << std::setw(5) << std::setfill(' ')  << result.confidence << " ] "  << ANSI_RESET << result.reference << std::endl; 
+            }
+
+        } else if (!command.compare("/clear") || !command.compare("/c"))     {
+            clear_screen();
         } else if (!command.compare("/exit") || !command.compare("/e"))     {
             break;
         } else if (!command.compare("/remove") || !command.compare("/r"))     {
@@ -683,6 +972,7 @@ int main() {
             getline(iss, text);
 
             memo* mem = memories_get_by_id(memories, id); 
+            std::string old_memory_string = memo_to_stringc(mem);
             
             mem->text = mem->text;
             if (mem == nullptr) {
@@ -690,18 +980,15 @@ int main() {
                 continue;
             }
 
-            memo* old_mem = new memo(); 
-            copy(old_mem, mem);
-
             if (!memories_update_by_id(memories, id, text)) {
                 message(error_program_side, "Something went wrong");
                 continue;
             }
-            memo* mem_new = memories_get_by_id(memories, id); 
-            std::string message_str = "Memory    : "+ to_view_string(memo_to_stringc(old_mem)) + " successfuly";
+
+            std::string message_str = "Memory    : "+ to_view_string(old_memory_string) + " successfuly";
             message(ok, message_str);
-            message(display,          "updated to: " + to_view_string(memo_to_stringc(mem_new)));
-            delete mem;
+            message(display,          "updated to: " + to_view_string(memo_to_stringc(mem)));
+            
         } else if (!command.compare("/all")) {
             message(ok, "Displaying all memories.");
             for (const auto &mem: memories) {
@@ -717,34 +1004,3 @@ int main() {
 }
 
 
-
-
-/*
-void ngram_tokenizer();
-void levenshtain_distance(); // use templates 
-
-void cosine_similarity();
-void euclidian_distance();
-void tfidf(); 
-// check https://medium.com/@thisisharrsh/hands-on-implementation-of-custom-tf-idf-vectorizer-cd4860c31ad1
-// https://medium.com/@nikhilkarve007/implementing-tfidf-from-scratch-f2be7f9b6557
-void bm25(); // improvement over tfidf? ?????
-void suffix_arrays(); //?? 
-// paper: https://www.sciencedirect.com/science/article/abs/pii/S0167819114000805
-
-*/
-void boolean_retrieval_model(); /*
-Boolean Retrieval Model Using Inverted Index and Positional Index
-https://medium.com/analytics-vidhya/boolean-retrieval-model-using-inverted-index-and-positional-index-2a9782bcec99
-*/
-
-/*
-void glove();
-//https://medium.com/@neri.vvo/word-embedding-a-powerful-tool-word2vec-glove-fasttext-dd6e2171d5
-
-void search(); // multiprocessing if multiple search models used;
-void metric(); // function pointers?
-
-
-*/
-// Features: search as type goes
