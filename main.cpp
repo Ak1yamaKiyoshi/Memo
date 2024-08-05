@@ -935,35 +935,43 @@ int main() {
         } else if (!command.compare("/clear") || !command.compare("/c"))     {
             clear_screen();
         } else if (!command.compare("/help") || !command.compare("/h"))     {
+            const int command_width = 20;
+            const int description_width = 80;
             std::stringstream help_message;
             help_message 
                 << "Available commands:\n"
-                << ANSI_BRIGHT_WHITE << "/add " << ANSI_BRIGHT_BLUE << "<text> " << ANSI_RESET << "\t\t"
-                << "(or " << ANSI_BRIGHT_WHITE << "/a" << ANSI_RESET << ") - Add a new memory. " 
-                << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << " can have tags (e.g., " 
-                << ANSI_BRIGHT_MAGENTA << "#tag" << ANSI_RESET << ") used for filtering in search.\n"
-                << ANSI_BRIGHT_WHITE << "/repetition" << ANSI_RESET << "\t\t"
-                << "(or " << ANSI_BRIGHT_WHITE << "/i" << ANSI_RESET << ") - Check memory repetition (Not implemented yet).\n"
-                << ANSI_BRIGHT_WHITE << "/search " << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << "\t\t"
-                << "(or " << ANSI_BRIGHT_WHITE << "/s" << ANSI_RESET << ") - Search memories using " 
-                << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << ". You can filter by tags like " 
-                << ANSI_BRIGHT_MAGENTA << "#tag" << ANSI_RESET << ".\n"
-                << ANSI_BRIGHT_WHITE << "/clear" << ANSI_RESET << "\t\t"
-                << "(or " << ANSI_BRIGHT_WHITE << "/c" << ANSI_RESET << ") - Clear the screen.\n"
-                << ANSI_BRIGHT_WHITE << "/help  " << ANSI_RESET << "\t\t"
-                << "(or " << ANSI_BRIGHT_WHITE << "/h" << ANSI_RESET << ") - Display this help message.\n"
-                << ANSI_BRIGHT_WHITE << "/exit  " << ANSI_RESET << "\t\t"
-                << "(or " << ANSI_BRIGHT_WHITE << "/e" << ANSI_RESET << ") - Exit the program.\n"
-                << ANSI_BRIGHT_WHITE << "/remove " << ANSI_YELLOW << "<id>" << ANSI_RESET << "\t\t"
-                << "(or " << ANSI_BRIGHT_WHITE << "/r" << ANSI_RESET << ") - Remove a memory with the specified " 
-                << ANSI_YELLOW << "<id>" << ANSI_RESET << ".\n"
-                << ANSI_BRIGHT_WHITE << "/update " << ANSI_YELLOW << "<id> " << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << "\t"
-                << "(or " << ANSI_BRIGHT_WHITE << "/u" << ANSI_RESET << ") - Update a memory with the specified " 
-                << ANSI_YELLOW << "<id>" << ANSI_RESET << " to the new " 
-                << ANSI_BRIGHT_BLUE << "<text>" << ANSI_RESET << ".\n"
-                << ANSI_BRIGHT_WHITE << "/all   " << ANSI_RESET << "\t\t- Display all memories.\n";
+                << ANSI_BRIGHT_WHITE << std::setw(command_width) << std::left << "/add <text>" << ANSI_RESET 
+                << std::setw(description_width) << std::left << "(or /a) - Add a new memory. <text> can have tags (e.g., #tag) used for filtering in search." << "\n"
+                
+                << ANSI_BRIGHT_WHITE << std::setw(command_width) << std::left << "/repetition" << ANSI_RESET 
+                << std::setw(description_width) << std::left << "(or /i) - (Not implemented yet)." << "\n"
+
+                << ANSI_BRIGHT_WHITE << std::setw(command_width) << std::left << "/search <text>" << ANSI_RESET 
+                << std::setw(description_width) << std::left << "(or /s) - Search memories using <text>. You can filter by tags like #tag." << "\n"
+
+                << ANSI_BRIGHT_WHITE << std::setw(command_width) << std::left << "/clear" << ANSI_RESET 
+                << std::setw(description_width) << std::left << "(or /c) - Clear the screen." << "\n"
+
+                << ANSI_BRIGHT_WHITE << std::setw(command_width) << std::left << "/help" << ANSI_RESET 
+                << std::setw(description_width) << std::left << "(or /h) - Display this help message." << "\n"
+
+                << ANSI_BRIGHT_WHITE << std::setw(command_width) << std::left << "/exit" << ANSI_RESET 
+                << std::setw(description_width) << std::left << "(or /e) - Exit the program." << "\n"
+
+                << ANSI_BRIGHT_WHITE << std::setw(command_width) << std::left << "/remove <id>" << ANSI_RESET 
+                << std::setw(description_width) << std::left << "(or /r) - Remove a memory with the specified <id>." << "\n"
+
+                << ANSI_BRIGHT_WHITE << std::setw(command_width) << std::left << "/update <id> <text>" << ANSI_RESET 
+                << std::setw(description_width) << std::left << "(or /u) - Update a memory with the specified <id> to the new <text>." << "\n"
+
+                << ANSI_BRIGHT_WHITE << std::setw(command_width) << std::left << "/all" << ANSI_RESET 
+                << std::setw(description_width) << std::left << "- Display all memories." << "\n";
 
             message(display, help_message.str());
+            
+
+
+
 
         } else if (!command.compare("/exit") || !command.compare("/e"))     {
             break;
