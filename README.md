@@ -11,6 +11,7 @@ I started this project because:
 
 Since this app serves my own purpose for taking notes, you can expect me to maintain the repository over time.
 
+
 ### Disclaimer
 
 The code is messy and buggy. Use at your own risk. All of us have a life outside of the computer, and so do I (not that often, really).
@@ -26,11 +27,9 @@ make
 ```
 
 **Run:**
-
-```bash
+```
 cd build
-chmod +x memo
-./memo
+./bin/memo
 ```
 
 **Commands:**
@@ -61,4 +60,3 @@ chmod +x memo
 
 - **/all**
   - Display all memories.
-

@@ -28,6 +28,14 @@
 // ▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓                ▒                    ░░     ░           ░     ░░        
 // ░░░░░░░░░░▒▒▒▒▒▒▒▒▓▓▒▒▒▒▒▒▓▓▒▒▒▒▒░░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 
+#include "../include/utils.hpp"
+#include "../include/memories.hpp"
+#include "../include/repetitions.hpp"
+#include "../include/search.hpp"
+#include "../include/string_utils.hpp"
+#include "../include/vocablurary.hpp"
+
+
 int main() {
     std::string filename_memories = "memories.txt";
     if (!is_file_exist(filename_memories)) {
@@ -102,7 +110,7 @@ int main() {
                 if (i++ > 5) break;
 
                 std::cout << "[" << ANSI_BRIGHT_WHITE<< std::fixed << std::setprecision(2) 
-                << std::setw(5) << std::setfill(' ')  << result.confidence << " ] "  << ANSI_RESET << result.reference << std::endl; 
+                << std::setw(5) << std::setfill(' ')  << result.confidence << " ] "  << ANSI_RESET << memo_to_stringc( result.reference) << std::endl; 
             }
 
         } else if (!command.compare("/clear") || !command.compare("/c"))     {
@@ -210,4 +218,3 @@ int main() {
 
     return 0;
 }
-

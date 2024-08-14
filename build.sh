@@ -1,1 +1,0 @@
-g++ -o memories ./main.cpp
