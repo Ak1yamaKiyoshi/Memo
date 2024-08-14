@@ -11,7 +11,6 @@ I started this project because:
 
 Since this app serves my own purpose for taking notes, you can expect me to maintain the repository over time.
 
-
 ### Disclaimer
 
 The code is messy and buggy. Use at your own risk. All of us have a life outside of the computer, and so do I (not that often, really).
@@ -21,27 +20,17 @@ The code is messy and buggy. Use at your own risk. All of us have a life outside
 **Compile:**
 
 ```bash
-chmod +x ./build.sh
-./build.sh
-
-# another way: 
-
-# mkdir build && cd build
-# cmake ..
-# make
+mkdir build && cd build
+cmake ..
+make
 ```
 
 **Run:**
 
 ```bash
-chmod +x ./run.sh
-./run.sh
-
-# another way: 
-
-# cd build
-# chmod +x memo
-# ./memo
+cd build
+chmod +x memo
+./memo
 ```
 
 **Commands:**
@@ -72,3 +61,4 @@ chmod +x ./run.sh
 
 - **/all**
   - Display all memories.
+

@@ -28,15 +28,6 @@
 // ▒▒▒▒▒▒▒▒▒▒▒▒▒▓▓                ▒                    ░░     ░           ░     ░░        
 // ░░░░░░░░░░▒▒▒▒▒▒▒▒▓▓▒▒▒▒▒▒▓▓▒▒▒▒▒░░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 
-
-#include "include/memories.hpp"
-#include "include/repetitions.hpp"
-#include "include/search.hpp"
-#include "include/string_utils.hpp"
-#include "include/utils.hpp"
-#include "include/vocablurary.hpp"
-
-
 int main() {
     std::string filename_memories = "memories.txt";
     if (!is_file_exist(filename_memories)) {
@@ -105,9 +96,11 @@ int main() {
             message(ok, "Search completed in " + std::to_string(time_taken) + "s. ");
             message(display, "Results: ");
 
+
             int i = 0;
             for (auto result: rs) {
                 if (i++ > 5) break;
+
                 std::cout << "[" << ANSI_BRIGHT_WHITE<< std::fixed << std::setprecision(2) 
                 << std::setw(5) << std::setfill(' ')  << result.confidence << " ] "  << ANSI_RESET << result.reference << std::endl; 
             }
@@ -149,7 +142,6 @@ int main() {
 
             message(display, help_message.str());
             
-
         } else if (!command.compare("/exit") || !command.compare("/e"))     {
             break;
         } else if (!command.compare("/remove") || !command.compare("/r"))     {
@@ -218,3 +210,4 @@ int main() {
 
     return 0;
 }
+
