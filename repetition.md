@@ -1,68 +1,4 @@
 
-spaced repetition of memories:
-
-memory#1
-memory#2
-memory#3 
-memory#4 
-
-seen#1 -> +2 days -> seen#2 -> +3 days -> seen#3
-day 0, day 2, day 5
-
-so: 
-#1 
-    penalty;
-    first seen;
-    todays date;
-    days;
-    for each time seen: 
-    days += diff (time seen cur, time seen prev)
-
-    if todays date > first seen + days + penalty:
-    need to repeat
-
-
-#2
-one of that:
-  remove 1/3 of words
-  insert random characters across 
-  reverse string 
-
-go trough each memory:
-  get todays memories #1
-  show to the user transformed #2
-  ask if user needs to repeat it (y, n, m)
-  add penalty in days to memory. 
-
-memories should have then:
-  penalty_days
-  repetition days that contain days when user repeated the memory 
-  to repeat flag, we don't want to repeat every single one of memmory
-
-additional:
-  display flag
-
-nice to have features: 
-  pipe `n` search results to certain operation: like add tag, remove tag, link to memory
-
-also, as part of gamification:
-    make a market, where you can buy functions from currency
-    currency earned by adding and editing memories, 
-    more complex operations should give player more currenc
-```
-
-
-
-
-
-
-
-
-
-
-
----
-
 /*
 спогад ; коли     ; згадав чи нє ; днів пропущено
 int    ; timstamp ; bool         ; int 
@@ -142,8 +78,6 @@ memory_id : memory_id
 memory:
   linked_memories: ref
 
-
-
 ```
 ```
 Memory#1
@@ -163,11 +97,3 @@ Memory#8 #todo
 
 /repetition #todo 
 Memory#8 
-
-
----
-Anki -> 
-заносиш туди картки з словами, описуєш їх якось, або даєш з іншого боку картки переклад
-показу є раз на кілька днів шоб ти просто запам'ятав 
-
-```

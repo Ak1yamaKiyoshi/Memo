@@ -5,12 +5,6 @@
 #include <sstream>
 #include <iomanip>
 
-// void evaluate_repetition(repetition* rep, int memory_id, bool status) {
-// 
-// }
-
-// - - - 
-
 enum ability {
     ab_add, ab_remove, ab_update, ab_search, ab_all, ab_repetitions, ab_asciiart
 };

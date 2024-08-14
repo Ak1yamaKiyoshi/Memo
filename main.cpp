@@ -882,20 +882,6 @@ std::vector<search_result> search(
 }  
 
 
-
-/* - - - - */
-
-std::vector<std::string> split_by_space(const std::string &str) {
-    std::vector<std::string> terms;
-    std::stringstream iss(str);
-    while (1) {
-        std::string buffer;
-        if (!(iss >> buffer)) break;
-        else terms.push_back(buffer);
-    }
-    return terms;
-}
-
 /* - - - - */
 
 std::vector<int> string_vec_to_int(const std::vector<std::string> &from) {
@@ -1201,5 +1187,3 @@ int main() {
 
     return 0;
 }
-
-
