@@ -27,7 +27,7 @@ make
 ```
 
 **Run:**
-
+```
 cd build
 ./bin/memo
 ```
